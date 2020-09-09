@@ -1,0 +1,93 @@
+--
+name: Slack
+id: slack
+request:
+  params:
+    - name: CALLBACK_URL
+      label: Slack Callback URL
+    - name: MESSAGE
+      label: Slack Message Template
+      default: "> *Success:* Deployed latest changes to production.\n> *Author:* `<<D_GIT_AUTHOR>>` \n*Commit:* `<<D_GIT_HASH>>`"
+  method: POST
+  url_tmpl: "<<CALLBACK_URL>>"
+  headers:
+    - name: Content-Type
+      value_tmpl: "application/json"
+  body_tmpl: |
+    {
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": <<MESSAGE>>
+          }
+        }
+      ]
+    }
+
+--
+name: Rollbar
+id: rollbar
+request:
+  params:
+    - name: ACCESS_TOKEN
+      label: Access Token
+    - name: ENVIRONMENT
+      label: Deployment Environment
+    - name: ROLLBAR_USERNAME
+      label: Rollbar Username
+    - name: COMMENT
+      label: Extra Comments
+  method: POST
+  url_tmpl: "https://api.rollbar.com/api/1/deploy/"
+  headers:
+    - name: Content-Type
+      value_tmpl: application/x-www-form-urlencoded
+  body_tmpl: |
+    access_token=<<ACCESS_TOKEN>>&environment=<<ENVIRONMENT>>&revision=<<D_GIT_HASH>>&local_username=<<D_GIT_AUTHOR>>&rollbar_username=<<ROLLBAR_USERNAME>>&comment=<<COMMENT>>
+--
+name: NewRelic
+id: newrelic
+request:
+  params:
+    - name: CALLBACK_URL
+      label: Newrelic Callback URL
+    - name: API_KEY
+      label: API Key
+  method: POST
+  url_tmpl: <<CALLBACK_URL>>
+  headers:
+    - name: Content-Type
+      value_tmpl: application/json
+    - name: X-Api-Key
+      value_tmpl: <<API_KEY>>
+  body_tmpl: |
+    { "deployment": { "revision": "<<D_COMMIT_HASH>>" } }
+--
+name: SOX Auditor
+id: sox-auditor
+request:
+  params:
+    - name: REPO_NAME
+      label: SOX Auditor Repository Name
+  method: POST
+  headers:
+    - name: Content-Type
+      value_tmpl: application/json
+    - name: release-hmac-sha256
+      value_tmpl: <<D_HMAC_256_SIGNATURE>>
+  url_tmpl: "https://auditor.weworkers.io/callback/release?repo_name=<<REPO_NAME>>"
+  body_tmpl: |
+    {
+    "action": "create",
+    "id": "<<D_COMMIT_HASH>>",
+    "data": {
+      "slug": {
+        "commit": "<<D_COMMIT_HASH>>"
+      },
+      "status": "succeeded"
+    },
+    "published_at": "<<D_NOW("%Y-%m-%dT%H:%M:%SZ")>>"
+    }
+  

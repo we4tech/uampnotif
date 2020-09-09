@@ -1,0 +1,29 @@
+name: SOX Auditor
+id: sox-auditor
+request:
+  valid_http_codes:
+    - 201
+  params:
+    - name: repo_name
+      label: SOX Auditor Repository Name
+    - name: secret
+      label: Repository specific secret
+  method: POST
+  headers:
+    - name: Content-Type
+      value_tmpl: "application/json"
+    - name: release-hmac-sha256
+      value_tmpl: '{{.FindEnv "hmac_256_signature"}}'
+  url_tmpl: 'https://auditor.weworkers.io/callback/release?repo_name={{.FindParam "repo_name"}}'
+  body_tmpl: |
+    {
+    "action": "create",
+    "id": "{{.FindEnv "commit_hash"}}",
+    "data": {
+      "slug": {
+        "commit": "{{.FindEnv "commit_hash"}}"
+      },
+      "status": "succeeded"
+    },
+    "published_at": "{{now.Format "%Y-%m-%dT%H:%M:%SZ"}}"
+    }

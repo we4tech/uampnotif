@@ -1,0 +1,29 @@
+name: Slack
+id: slack
+request:
+  valid_http_codes:
+    - 200
+    - 201
+  params:
+    - name: callback_url
+      label: Slack Callback URL
+    - name: message
+      label: Slack Message Template
+      default: "*Success:* Deployed latest changes to production"
+  method: POST
+  url_tmpl: '{{.FindParam "callback_url"}}'
+  headers:
+    - name: Content-Type
+      value_tmpl: "application/json"
+  body_tmpl: |
+    {
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "> {{.FindParam "message"}}.\n> *Author:* `{{.FindEnv "commit_author"}}` \n*Commit:* `{{.FindEnv "commit_hash"}}`"
+          }
+        }
+      ]
+    }

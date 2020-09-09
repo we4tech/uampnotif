@@ -1,0 +1,22 @@
+name: Rollbar
+id: rollbar
+request:
+  valid_http_codes:
+    - 200
+  params:
+    - name: access_token
+      label: Access Token
+    - name: environment
+      label: Deployment Environment
+    - name: rollbar_username
+      label: Rollbar Username
+    - name: comment
+      label: Extra Comments
+      default: ""
+  method: POST
+  url_tmpl: "https://api.rollbar.com/api/1/deploy/"
+  headers:
+    - name: Content-Type
+      value_tmpl: application/x-www-form-urlencoded
+  body_tmpl: |
+    access_token={{.FindParam "access_token"}}&environment={{.FindParam "environment"}}>>&revision={{.FindEnv "commit_hash"}}&local_username={{.FindEnv "commit_author"}}&rollbar_username={{.FindParam "rollbar_username"}}&comment={{.FindParam "comment"}}
