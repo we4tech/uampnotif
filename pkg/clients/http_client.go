@@ -3,7 +3,6 @@ package clients
 import (
 	"bytes"
 	"fmt"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,8 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/integrations"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/validators"
+	"github.com/we4tech/uampnotif/pkg/integrations"
+	"github.com/we4tech/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/validators"
 )
 
 const (
@@ -51,7 +51,7 @@ type httpClient struct {
 	client  ClientImpl
 	request *http.Request
 
-	spec    *integrations.IntegrationSpec
+	spec    *integrations.Spec
 	tmplCtx *templates.TemplateContext
 
 	url     string
@@ -98,7 +98,7 @@ func (c *httpClient) validate() (bool, validators.ValidationErrors) {
 // a successful receivedRequest.
 //
 func NewHttpRequest(
-	spec *integrations.IntegrationSpec,
+	spec *integrations.Spec,
 	parameters map[string]string,
 	envVars map[string]string) (Client, error) {
 

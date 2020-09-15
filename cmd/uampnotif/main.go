@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/internal/controller"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"net/http"
-
-	"log"
-	"os"
+	"github.com/we4tech/uampnotif/internal/controller"
 )
 
 //

@@ -2,14 +2,14 @@ package integrations
 
 import (
 	"fmt"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"testing"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/templates"
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
@@ -63,7 +63,7 @@ func TestReadShouldReadConfigs(t *testing.T) {
 	}
 }
 
-func validateIntegration(integration *IntegrationSpec, t *testing.T) {
+func validateIntegration(integration *Spec, t *testing.T) {
 	ctx := buildContext(integration)
 
 	t.Run("should find name", func(t *testing.T) {
@@ -156,7 +156,7 @@ func validateIntegration(integration *IntegrationSpec, t *testing.T) {
 	})
 }
 
-func buildContext(integration *IntegrationSpec) *templates.TemplateContext {
+func buildContext(integration *Spec) *templates.TemplateContext {
 	params := make(map[string]string)
 	env := map[string]string{
 		"commit_hash":        "hello-commit-hash",
@@ -172,7 +172,7 @@ func buildContext(integration *IntegrationSpec) *templates.TemplateContext {
 	return ctx
 }
 
-func getIntegration(configFile string) (*IntegrationSpec, error) {
+func getIntegration(configFile string) (*Spec, error) {
 	parser := NewDefaultConfigParser()
 
 	return parser.Read(configFile)

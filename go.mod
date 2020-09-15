@@ -1,4 +1,4 @@
-module github.com/WeConnect/hello-tools/uampnotif
+module github.com/we4tech/uampnotif
 
 go 1.14
 

@@ -1,6 +1,6 @@
 package integrations
 
-import "github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+import "github.com/we4tech/uampnotif/pkg/templates"
 
 //
 // ParsedRequest represents how to construct a request to the integrated system.
@@ -72,27 +72,27 @@ type ParsedHeader interface {
 }
 
 //
-// IntegrationConfigParser parses YAML configuration file and converts to
-// IntegrationSpec struct.
+// ConfigParser parses YAML configuration file and converts to
+// Spec struct.
 //
 // Following errors are raised in case of the following scenarios.
 //   - "Invalid yaml config" if failed to parse YAML file.
 //   - "Invalid config but " if valid yaml but required attributes are missing.
 //
-type IntegrationConfigParser interface {
+type ConfigParser interface {
 	//
-	// Read a configuration YAML and converts into an IntegrationSpec object.
+	// Read a configuration YAML and converts into an Spec object.
 	//
-	Read(configYamlFile string) (IntegrationSpec, error)
+	Read(configYamlFile string) (Spec, error)
 }
 
 //
-// Service represents the actual implementation based on IntegrationSpec
+// Service represents the actual implementation based on Spec
 // object.
 //
 type Service interface {
 	//
 	// Execute the underlying integration request with appropriate context.
 	//
-	Execute(i IntegrationSpec, context templates.TemplateContext) (bool, error)
+	Execute(i Spec, context templates.TemplateContext) (bool, error)
 }
