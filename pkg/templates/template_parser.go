@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
 var functionMap = template.FuncMap{

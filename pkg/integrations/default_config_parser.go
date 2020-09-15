@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
 type DefaultConfigParser struct{}
@@ -18,10 +18,10 @@ func NewDefaultConfigParser() DefaultConfigParser {
 }
 
 //
-// Read takes the configYamlFile and converts into IntegrationSpec after
+// Read takes the configYamlFile and converts into Spec after
 // successful parsing struct.
 //
-func (dcp DefaultConfigParser) Read(configYamlFile string) (*IntegrationSpec, error) {
+func (dcp DefaultConfigParser) Read(configYamlFile string) (*Spec, error) {
 	_, err := os.Stat(configYamlFile)
 
 	if os.IsNotExist(err) {
@@ -38,8 +38,8 @@ func (dcp DefaultConfigParser) Read(configYamlFile string) (*IntegrationSpec, er
 
 func (dcp DefaultConfigParser) readInternal(
 	fileData []byte,
-	configYamlFile string) (*IntegrationSpec, error) {
-	var integration = &IntegrationSpec{}
+	configYamlFile string) (*Spec, error) {
+	var integration = &Spec{}
 
 	if err := yaml.Unmarshal(fileData, integration); err != nil {
 		return nil, common_errors.ConfigParsingError{File: configYamlFile, Err: err}

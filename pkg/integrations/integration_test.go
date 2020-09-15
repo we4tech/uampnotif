@@ -25,7 +25,7 @@ request:
   body_tmpl: |
     { "deployment": { "revision": "{{.FindEnv "commit_hash"}}" } }
 `
-	spec, err := NewIntegrationSpec([]byte(yamlConfig))
+	spec, err := NewSpec([]byte(yamlConfig))
 
 	if err != nil {
 		t.Errorf("could not parse the config. Error - %s", err)

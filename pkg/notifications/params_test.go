@@ -1,7 +1,7 @@
-package notifiers
+package notifications
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/templates"
 	"testing"
 )
 

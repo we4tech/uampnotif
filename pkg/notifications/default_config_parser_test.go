@@ -1,4 +1,4 @@
-package notifiers
+package notifications
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
@@ -41,19 +41,19 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldParseConfig(t *testing.T) {
 	dir, _ := os.Getwd()
-	configFile := path.Join(dir, "../../config/notifiers.yml")
+	configFile := path.Join(dir, "../../config/notifications.yml")
 
 	parser := NewDefaultConfigParser()
 	notifiers, err := parser.Read(configFile)
 
 	if err != nil {
-		t.Errorf("could not parse notifiers.yml. Error - %s", err)
+		t.Errorf("could not parse notifications.yml. Error - %s", err)
 	}
 
 	validateNotifiers(notifiers, t)
 }
 
-func validateNotifiers(notifiers *Notifiers, t *testing.T) {
+func validateNotifiers(notifiers *Config, t *testing.T) {
 	t.Run("should have default settings", func(t *testing.T) {
 		if notifiers.DefaultSettings.Retries != 3 {
 			t.Error("could not find retries == 3")
@@ -103,11 +103,11 @@ func validateNotifiers(notifiers *Notifiers, t *testing.T) {
 	})
 }
 
-func findNotifier(name string, notifiers *Notifiers) (Notifier, bool) {
+func findNotifier(name string, config *Config) (Notifier, bool) {
 	found := false
 	var notifier Notifier
 
-	for _, n := range notifiers.Notifiers {
+	for _, n := range config.Notifiers {
 		if n.Id == name {
 			found = true
 			notifier = n

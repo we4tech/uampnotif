@@ -1,9 +1,9 @@
 ##
-# Default settings for all notifiers.
+# Default settings for all notifications.
 #
 default_settings:
   retries: 3
-  # Do you prefer uampnotif to call all notifiers concurrently?
+  # Do you prefer uampnotif to call all notifications concurrently?
   async: true
   # What do you want us to do in case of a failure to notify one of the
   # downstream systems?
@@ -15,14 +15,14 @@ default_settings:
   #
   on_error: ignore
   # TODO: Future feature
-  # Do you prefer to notify a list of notifiers if error arises?
+  # Do you prefer to notify a list of notifications if error arises?
   on_error_notifiers:
     - id: slack
       params:
         callback_url: https://httpbin.org/post
 
 ##
-# A list of notifiers to be invoked whenever uampnotif is launched.
+# A list of notifications to be invoked whenever uampnotif is launched.
 #
 notifiers:
   ##

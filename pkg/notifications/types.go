@@ -1,9 +1,9 @@
-package notifiers
+package notifications
 
 //
-// Notifiers keeps a default settings and a list of notifiers.
+// Config keeps a default settings and a list of notifications.
 //
-type Notifiers struct {
+type Config struct {
 	DefaultSettings Setting `yaml:"default_settings"`
 	Notifiers       []Notifier
 }
@@ -29,12 +29,12 @@ type Notifier struct {
 }
 
 //
-// AppConfigParser interface to provide a way to interact with different
+// ConfigParser interface to provide a way to interact with different
 // implementations.
 //
-type AppConfigParser interface {
+type ConfigParser interface {
 	//
-	// Read a configuration yaml and convert into a Notifiers object.
+	// Read a configuration yaml and convert into a Config object.
 	//
-	Read(configYamlFile string) (*Notifiers, error)
+	Read(configYamlFile string) (*Config, error)
 }

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/integrations"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/we4tech/uampnotif/pkg/integrations"
 )
 
 const TestConfig = `
@@ -168,8 +169,8 @@ func TestSendRequest_ShouldRaiseClientRequestErrorIfRequestFailed(t *testing.T) 
 	}
 }
 
-func createIntSpec() *integrations.IntegrationSpec {
-	spec, _ := integrations.NewIntegrationSpec([]byte(TestConfig))
+func createIntSpec() *integrations.Spec {
+	spec, _ := integrations.NewSpec([]byte(TestConfig))
 
 	return spec
 }

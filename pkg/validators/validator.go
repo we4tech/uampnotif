@@ -1,8 +1,8 @@
 package validators
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/integrations"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/integrations"
+	"github.com/we4tech/uampnotif/pkg/templates"
 )
 
 //
@@ -13,11 +13,11 @@ import (
 //
 
 //
-// integrationSpecValidator implements a Validator to validate an IntegrationSpec struct.
+// integrationSpecValidator implements a Validator to validate an Spec struct.
 //
 type integrationSpecValidator struct {
 	templateContext *templates.TemplateContext
-	integration     *integrations.IntegrationSpec
+	integration     *integrations.Spec
 	errors          *validationErrors
 	valid           bool
 }
@@ -89,7 +89,7 @@ func (iv *integrationSpecValidator) addError(field string, message string) {
 // NewValidator returns an instance of validator.
 //
 func NewValidator(
-	integration *integrations.IntegrationSpec,
+	integration *integrations.Spec,
 	templateCtx *templates.TemplateContext) Validator {
 	return &integrationSpecValidator{
 		integration:     integration,

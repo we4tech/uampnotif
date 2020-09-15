@@ -1,19 +1,19 @@
 package integrations
 
 //
-// IntegrationSpec composes all relevant configuration together.
+// Spec composes all relevant configuration together.
 //
-type IntegrationSpec struct {
+type Spec struct {
 	Name    string
 	Id      string
 	Request request
 }
 
 //
-// NewIntegrationSpec returns an instance of integration struct based on the
+// NewSpec returns an instance of integration struct based on the
 // passed yamlConfig.
 //
-func NewIntegrationSpec(yamlConfig []byte) (*IntegrationSpec, error) {
+func NewSpec(yamlConfig []byte) (*Spec, error) {
 	dcp := NewDefaultConfigParser()
 
 	return dcp.readInternal(yamlConfig, "internal-buffer")
