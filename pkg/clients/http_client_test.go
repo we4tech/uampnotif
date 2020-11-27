@@ -1,11 +1,9 @@
 package clients
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
+	"github.com/we4tech/uampnotif/pkg/testutils"
 	"io/ioutil"
-	"net/http"
 	"reflect"
 	"sort"
 	"testing"
@@ -36,31 +34,6 @@ request:
     { "deployment": { "revision": "{{.FindEnv "commit_hash"}}" } }
 `
 
-type mockHttpClient struct {
-	receivedRequest *http.Request
-	sentResponse    *http.Response
-
-	responseCode int
-	responseBody []byte
-
-	raiseError string
-}
-
-func (mhc *mockHttpClient) Do(req *http.Request) (*http.Response, error) {
-	mhc.receivedRequest = req
-
-	if mhc.raiseError != "" {
-		return nil, errors.New(mhc.raiseError)
-	}
-
-	body := ioutil.NopCloser(bytes.NewReader(mhc.responseBody))
-
-	return &http.Response{
-		StatusCode: mhc.responseCode,
-		Body:       body,
-	}, nil
-}
-
 func TestNewRequest_ShouldCreateRequestWithoutError(t *testing.T) {
 	params := map[string]string{
 		"app_id":  "app-id-134",
@@ -78,7 +51,7 @@ func TestNewRequest_ShouldCreateRequestWithoutError(t *testing.T) {
 
 func TestSendRequest_ShouldSuccessfullySendGetRequest(t *testing.T) {
 	responseBody := []byte("hello world")
-	mockClient := &mockHttpClient{responseCode: 201, responseBody: responseBody}
+	mockClient := testutils.NewMockHttpClient(201, responseBody)
 
 	request := buildCommonRequest(mockClient)
 	resp, err := request.SendRequest()
@@ -101,8 +74,7 @@ func TestSendRequest_ShouldSuccessfullySendGetRequest(t *testing.T) {
 }
 
 func TestSendRequest_ShouldSendHeaders(t *testing.T) {
-	mockClient := &mockHttpClient{
-		responseCode: 201, responseBody: []byte("hello")}
+	mockClient := testutils.NewMockHttpClient(201, []byte("hello"))
 
 	request := buildCommonRequest(mockClient)
 	resp, _ := request.SendRequest()
@@ -113,7 +85,7 @@ func TestSendRequest_ShouldSendHeaders(t *testing.T) {
 
 	expectedHeaders := []string{"Content-Type", "X-Api-Kxx"}
 
-	for key := range mockClient.receivedRequest.Header {
+	for key := range mockClient.ReceivedRequest.Header {
 		if len(expectedHeaders) == sort.SearchStrings(expectedHeaders, key) {
 			t.Errorf("could not find header - %s", key)
 		}
@@ -122,8 +94,7 @@ func TestSendRequest_ShouldSendHeaders(t *testing.T) {
 
 func TestSendRequest_ShouldSendPostBody(t *testing.T) {
 	postBody := []byte("hello post body")
-	mockClient := &mockHttpClient{
-		responseCode: 201, responseBody: postBody}
+	mockClient := testutils.NewMockHttpClient(201, postBody)
 
 	request := buildCommonRequest(mockClient)
 	resp, _ := request.SendRequest()
@@ -132,7 +103,7 @@ func TestSendRequest_ShouldSendPostBody(t *testing.T) {
 		t.Error()
 	}
 
-	bodyBytes, _ := ioutil.ReadAll(mockClient.receivedRequest.Body)
+	bodyBytes, _ := ioutil.ReadAll(mockClient.ReceivedRequest.Body)
 	bodyString := string(bodyBytes)
 
 	if bodyString == "" {
@@ -154,8 +125,9 @@ func TestSendRequest_ShouldSendPostBody(t *testing.T) {
 
 func TestSendRequest_ShouldRaiseClientRequestErrorIfRequestFailed(t *testing.T) {
 	postBody := []byte("hello post body")
-	mockClient := &mockHttpClient{
-		responseCode: 500, responseBody: postBody, raiseError: "unwanted error"}
+	mockClient := testutils.
+		NewMockHttpClient(500, postBody).
+		RaiseError("unwanted error")
 
 	request := buildCommonRequest(mockClient)
 	_, err := request.SendRequest()
@@ -175,7 +147,7 @@ func createIntSpec() *integrations.Spec {
 	return spec
 }
 
-func buildCommonRequest(mockClient *mockHttpClient) Client {
+func buildCommonRequest(mockClient *testutils.MockHttpClient) Client {
 	params := map[string]string{
 		"app_id":  "app-id-123",
 		"api_key": "api-key-1345",

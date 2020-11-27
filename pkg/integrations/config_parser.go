@@ -8,20 +8,20 @@ import (
 	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
-type DefaultConfigParser struct{}
+type configParser struct{}
 
 //
-// NewDefaultConfigParser constructs an instance.
+// NewConfigParser constructs an instance.
 //
-func NewDefaultConfigParser() DefaultConfigParser {
-	return DefaultConfigParser{}
+func NewConfigParser() ConfigParser {
+	return &configParser{}
 }
 
 //
 // Read takes the configYamlFile and converts into Spec after
 // successful parsing struct.
 //
-func (dcp DefaultConfigParser) Read(configYamlFile string) (*Spec, error) {
+func (dcp *configParser) Read(configYamlFile string) (*Spec, error) {
 	_, err := os.Stat(configYamlFile)
 
 	if os.IsNotExist(err) {
@@ -36,7 +36,11 @@ func (dcp DefaultConfigParser) Read(configYamlFile string) (*Spec, error) {
 	return dcp.readInternal(fileData, configYamlFile)
 }
 
-func (dcp DefaultConfigParser) readInternal(
+func (dcp *configParser) ReadBytes(configYaml []byte) (*Spec, error) {
+	return dcp.readInternal(configYaml, "config.yaml-string")
+}
+
+func (dcp *configParser) readInternal(
 	fileData []byte,
 	configYamlFile string) (*Spec, error) {
 	var integration = &Spec{}

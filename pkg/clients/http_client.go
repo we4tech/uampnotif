@@ -105,6 +105,7 @@ func NewHttpRequest(
 	client := &httpClient{
 		tmplCtx: templates.NewTemplateContext(parameters, envVars),
 		spec:    spec,
+		method:  strings.ToUpper(spec.Request.Method),
 	}
 
 	if valid, errors := client.validate(); !valid {
@@ -165,8 +166,8 @@ func (c *httpClient) execute() (*Response, error) {
 			return nil, clientRequestError{errorAt: "Request.ReadingBody", err: err}
 		} else {
 			log.Printf(
-				"sendGetRequest: Received sentResponse for method:%s from "+
-					"url:%s status:%d",
+				"execute: Received response for method:%s from "+
+					"url:%s status:%d\n",
 				c.method, c.getPartialUrl(), res.StatusCode)
 
 			return &Response{
@@ -180,7 +181,7 @@ func (c *httpClient) execute() (*Response, error) {
 
 func (c *httpClient) createRequest() error {
 	log.Printf(
-		"sendPostRequest: Sending method:%s to url:%s",
+		"sendPostRequest: Sending method:%s to url:%s\n",
 		c.method, c.getPartialUrl())
 
 	request, err := http.NewRequest(
