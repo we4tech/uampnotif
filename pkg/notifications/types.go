@@ -26,6 +26,9 @@ type Notifier struct {
 	Id       string
 	Params   *Params
 	Settings *Setting
+
+	// Optional:
+	Desc string `yaml:"desc,omitempty"`
 }
 
 //

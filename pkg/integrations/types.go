@@ -83,7 +83,12 @@ type ConfigParser interface {
 	//
 	// Read a configuration YAML and converts into an Spec object.
 	//
-	Read(configYamlFile string) (Spec, error)
+	Read(configYamlFile string) (*Spec, error)
+
+	//
+	// ReadString to parse `configYaml` and returns Spec.
+	//
+	ReadBytes(configYaml []byte) (*Spec, error)
 }
 
 //

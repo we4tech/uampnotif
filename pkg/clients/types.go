@@ -9,7 +9,7 @@ type Client interface {
 	SendRequest() (*Response, error)
 
 	//
-	// SetClient sets the internal http client.
+	// SetClient change the internal http client.
 	//
 	SetClient(client ClientImpl)
 }

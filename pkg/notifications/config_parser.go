@@ -9,22 +9,22 @@ import (
 )
 
 //
-// DefaultConfigParser represents the instance of the config parser.
+// configParser represents the instance of the config parser.
 //
-type DefaultConfigParser struct {
+type configParser struct {
 }
 
 //
-// NewDefaultConfigParser constructs and returns a instance of DefaultConfigParser.
+// NewConfigParser constructs and returns a instance of configParser.
 //
-func NewDefaultConfigParser() DefaultConfigParser {
-	return DefaultConfigParser{}
+func NewConfigParser() ConfigParser {
+	return &configParser{}
 }
 
 //
 // Read from the specified appConfigYaml and converts into a Config.
 //
-func (dcp DefaultConfigParser) Read(appConfigYaml string) (*Config, error) {
+func (dcp *configParser) Read(appConfigYaml string) (*Config, error) {
 	_, err := os.Stat(appConfigYaml)
 
 	if os.IsNotExist(err) {
@@ -40,7 +40,7 @@ func (dcp DefaultConfigParser) Read(appConfigYaml string) (*Config, error) {
 	return dcp.readInternal(fileData, appConfigYaml)
 }
 
-func (dcp DefaultConfigParser) readInternal(
+func (dcp *configParser) readInternal(
 	fileData []byte,
 	appConfigYaml string) (*Config, error) {
 

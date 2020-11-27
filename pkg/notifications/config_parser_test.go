@@ -11,7 +11,7 @@ import (
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	parser := NewDefaultConfigParser()
+	parser := NewConfigParser()
 	_, err := parser.Read("../invalid-file-path.yaml")
 
 	if err == nil {
@@ -27,7 +27,8 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 	invalidYaml := []byte("settings: hello: hello")
 	invalidYamlFile := "a-file-name-does-matter.yml"
 
-	parser := NewDefaultConfigParser()
+	parser := &configParser{}
+
 	_, err := parser.readInternal(invalidYaml, invalidYamlFile)
 
 	if err == nil {
@@ -43,7 +44,7 @@ func TestReadShouldParseConfig(t *testing.T) {
 	dir, _ := os.Getwd()
 	configFile := path.Join(dir, "../../config/notifications.yml")
 
-	parser := NewDefaultConfigParser()
+	parser := NewConfigParser()
 	notifiers, err := parser.Read(configFile)
 
 	if err != nil {

@@ -1,0 +1,22 @@
+##
+# Default settings for all notifications.
+#
+default_settings:
+  retries: 3
+  async: true  
+  on_error: ignore
+  on_error_notifiers:
+    - id: slack
+      params:
+        callback_url: https://httpbin.org/post
+
+notifiers:
+  - id: test
+    desc: Test1
+    params:
+      api_key: hello-world-api-key
+
+  - id: test
+    desc: Test2
+    params:
+      api_key: hello-world-api-key-2

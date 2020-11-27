@@ -13,7 +13,7 @@ import (
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	_, err := NewDefaultConfigParser().Read("invalid-path.yaml")
+	_, err := NewConfigParser().Read("invalid-path.yaml")
 
 	if err == nil {
 		t.Error("could not find ConfigNotFound error")
@@ -25,9 +25,8 @@ func TestReadShouldRaiseConfigNotFound(t *testing.T) {
 }
 
 func TestReadInternalRaiseConfigParsingError(t *testing.T) {
-	parser := NewDefaultConfigParser()
-	_, err := parser.readInternal(
-		[]byte("invalid_yaml: _invalid: _invalid"), "invalid.yaml")
+	parser := NewConfigParser()
+	_, err := parser.ReadBytes([]byte("invalid_yaml: _invalid: _invalid"))
 
 	if err == nil {
 		t.Error("could not find error")
@@ -173,7 +172,7 @@ func buildContext(integration *Spec) *templates.TemplateContext {
 }
 
 func getIntegration(configFile string) (*Spec, error) {
-	parser := NewDefaultConfigParser()
+	parser := NewConfigParser()
 
 	return parser.Read(configFile)
 }

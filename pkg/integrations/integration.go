@@ -14,7 +14,7 @@ type Spec struct {
 // passed yamlConfig.
 //
 func NewSpec(yamlConfig []byte) (*Spec, error) {
-	dcp := NewDefaultConfigParser()
+	dcp := NewConfigParser()
 
-	return dcp.readInternal(yamlConfig, "internal-buffer")
+	return dcp.ReadBytes(yamlConfig)
 }
