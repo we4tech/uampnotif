@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/we4tech/uampnotif/pkg/integrations"
+	"github.com/we4tech/uampnotif/pkg/configs"
 	"github.com/we4tech/uampnotif/pkg/templates"
 	"github.com/we4tech/uampnotif/pkg/validators"
 )
@@ -51,7 +51,7 @@ type httpClient struct {
 	client  ClientImpl
 	request *http.Request
 
-	spec    *integrations.Spec
+	spec    *configs.Spec
 	tmplCtx *templates.TemplateContext
 
 	url     string
@@ -98,7 +98,7 @@ func (c *httpClient) validate() (bool, validators.ValidationErrors) {
 // a successful receivedRequest.
 //
 func NewHttpRequest(
-	spec *integrations.Spec,
+	spec *configs.Spec,
 	parameters map[string]string,
 	envVars map[string]string) (Client, error) {
 
@@ -200,7 +200,7 @@ func (c *httpClient) buildHeaders() error {
 	c.headers = make(map[string]string)
 
 	err := c.spec.Request.Headers.ForEach(
-		func(i int, pHeader integrations.ParsedHeader) (bool, error) {
+		func(i int, pHeader configs.ParsedHeader) (bool, error) {
 			if value, err := pHeader.GetValue(c.tmplCtx); err != nil {
 				return true, clientRequestError{
 					errorAt: fmt.Sprintf("Request.Headers.%s", pHeader.GetName()),

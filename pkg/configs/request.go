@@ -1,4 +1,4 @@
-package integrations
+package configs
 
 import (
 	"github.com/we4tech/uampnotif/pkg/common_errors"

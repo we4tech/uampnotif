@@ -1,4 +1,4 @@
-package integrations
+package configs
 
 import (
 	"gopkg.in/yaml.v2"
@@ -8,20 +8,20 @@ import (
 	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
-type configParser struct{}
+type parser struct{}
 
 //
-// NewConfigParser constructs an instance.
+// NewParser constructs an instance.
 //
-func NewConfigParser() ConfigParser {
-	return &configParser{}
+func NewParser() Parser {
+	return &parser{}
 }
 
 //
 // Read takes the configYamlFile and converts into Spec after
 // successful parsing struct.
 //
-func (dcp *configParser) Read(configYamlFile string) (*Spec, error) {
+func (dcp *parser) Read(configYamlFile string) (*Spec, error) {
 	_, err := os.Stat(configYamlFile)
 
 	if os.IsNotExist(err) {
@@ -36,11 +36,11 @@ func (dcp *configParser) Read(configYamlFile string) (*Spec, error) {
 	return dcp.readInternal(fileData, configYamlFile)
 }
 
-func (dcp *configParser) ReadBytes(configYaml []byte) (*Spec, error) {
+func (dcp *parser) ReadBytes(configYaml []byte) (*Spec, error) {
 	return dcp.readInternal(configYaml, "config.yaml-string")
 }
 
-func (dcp *configParser) readInternal(
+func (dcp *parser) readInternal(
 	fileData []byte,
 	configYamlFile string) (*Spec, error) {
 	var integration = &Spec{}

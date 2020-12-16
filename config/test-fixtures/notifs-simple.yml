@@ -1,5 +1,5 @@
 ##
-# Default settings for all notifications.
+# Default settings for all notifiers.
 #
 default_settings:
   retries: 3

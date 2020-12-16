@@ -8,7 +8,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/we4tech/uampnotif/pkg/integrations"
+	"github.com/we4tech/uampnotif/pkg/configs"
 )
 
 const TestConfig = `
@@ -141,8 +141,8 @@ func TestSendRequest_ShouldRaiseClientRequestErrorIfRequestFailed(t *testing.T) 
 	}
 }
 
-func createIntSpec() *integrations.Spec {
-	spec, _ := integrations.NewSpec([]byte(TestConfig))
+func createIntSpec() *configs.Spec {
+	spec, _ := configs.NewSpec([]byte(TestConfig))
 
 	return spec
 }

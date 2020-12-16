@@ -1,4 +1,4 @@
-package integrations
+package configs
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	_, err := NewConfigParser().Read("invalid-path.yaml")
+	_, err := NewParser().Read("invalid-path.yaml")
 
 	if err == nil {
 		t.Error("could not find ConfigNotFound error")
@@ -25,7 +25,7 @@ func TestReadShouldRaiseConfigNotFound(t *testing.T) {
 }
 
 func TestReadInternalRaiseConfigParsingError(t *testing.T) {
-	parser := NewConfigParser()
+	parser := NewParser()
 	_, err := parser.ReadBytes([]byte("invalid_yaml: _invalid: _invalid"))
 
 	if err == nil {
@@ -39,7 +39,7 @@ func TestReadInternalRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldReadConfigs(t *testing.T) {
 	dir, _ := os.Getwd()
-	rootPath := path.Join(dir, "../../config/integrations")
+	rootPath := path.Join(dir, "../../config/configs")
 	configFiles, err := ioutil.ReadDir(rootPath)
 
 	if err != nil {
@@ -172,7 +172,7 @@ func buildContext(integration *Spec) *templates.TemplateContext {
 }
 
 func getIntegration(configFile string) (*Spec, error) {
-	parser := NewConfigParser()
+	parser := NewParser()
 
 	return parser.Read(configFile)
 }

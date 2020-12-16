@@ -1,4 +1,4 @@
-package integrations
+package configs
 
 import "github.com/we4tech/uampnotif/pkg/templates"
 
@@ -72,14 +72,14 @@ type ParsedHeader interface {
 }
 
 //
-// ConfigParser parses YAML configuration file and converts to
+// Parser parses YAML configuration file and converts to
 // Spec struct.
 //
 // Following errors are raised in case of the following scenarios.
 //   - "Invalid yaml config" if failed to parse YAML file.
 //   - "Invalid config but " if valid yaml but required attributes are missing.
 //
-type ConfigParser interface {
+type Parser interface {
 	//
 	// Read a configuration YAML and converts into an Spec object.
 	//

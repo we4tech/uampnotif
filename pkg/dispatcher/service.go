@@ -1,19 +1,19 @@
 package dispatcher
 
 import (
-	"github.com/we4tech/uampnotif/pkg/integrations"
-	"github.com/we4tech/uampnotif/pkg/notifications"
+	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/notifiers"
 )
 
 type dispatcher struct {
-	notifier         *notifications.Notifier
-	integrationSpecs map[string]integrations.Spec
+	notifier         *notifiers.Notifier
+	integrationSpecs map[string]configs.Spec
 }
 
 //
 // NewService returns an instance of dispatcher.
 //
-func NewService(notifier notifications.Notifier) *dispatcher {
+func NewService(notifier notifiers.Notifier) *dispatcher {
 	return &dispatcher{notifier: &notifier}
 }
 

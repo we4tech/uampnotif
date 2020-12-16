@@ -1,4 +1,4 @@
-package notifications
+package notifiers
 
 import (
 	"gopkg.in/yaml.v2"
@@ -9,22 +9,22 @@ import (
 )
 
 //
-// configParser represents the instance of the config parser.
+// parser represents the instance of the config parser.
 //
-type configParser struct {
+type parser struct {
 }
 
 //
-// NewConfigParser constructs and returns a instance of configParser.
+// NewParser constructs and returns a instance of parser.
 //
-func NewConfigParser() ConfigParser {
-	return &configParser{}
+func NewParser() Parser {
+	return &parser{}
 }
 
 //
 // Read from the specified appConfigYaml and converts into a Config.
 //
-func (dcp *configParser) Read(appConfigYaml string) (*Config, error) {
+func (dcp *parser) Read(appConfigYaml string) (*Config, error) {
 	_, err := os.Stat(appConfigYaml)
 
 	if os.IsNotExist(err) {
@@ -40,7 +40,7 @@ func (dcp *configParser) Read(appConfigYaml string) (*Config, error) {
 	return dcp.readInternal(fileData, appConfigYaml)
 }
 
-func (dcp *configParser) readInternal(
+func (dcp *parser) readInternal(
 	fileData []byte,
 	appConfigYaml string) (*Config, error) {
 

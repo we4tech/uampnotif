@@ -1,4 +1,4 @@
-package notifications
+package notifiers
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	parser := NewConfigParser()
+	parser := NewParser()
 	_, err := parser.Read("../invalid-file-path.yaml")
 
 	if err == nil {
@@ -27,7 +27,7 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 	invalidYaml := []byte("settings: hello: hello")
 	invalidYamlFile := "a-file-name-does-matter.yml"
 
-	parser := &configParser{}
+	parser := &parser{}
 
 	_, err := parser.readInternal(invalidYaml, invalidYamlFile)
 
@@ -42,13 +42,13 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldParseConfig(t *testing.T) {
 	dir, _ := os.Getwd()
-	configFile := path.Join(dir, "../../config/notifications.yml")
+	configFile := path.Join(dir, "../../config/notifiers.yml")
 
-	parser := NewConfigParser()
+	parser := NewParser()
 	notifiers, err := parser.Read(configFile)
 
 	if err != nil {
-		t.Errorf("could not parse notifications.yml. Error - %s", err)
+		t.Errorf("could not parse notifiers.yml. Error - %s", err)
 	}
 
 	validateNotifiers(notifiers, t)

@@ -2,9 +2,9 @@ package dispatcher_test
 
 import (
 	"context"
+	"github.com/we4tech/uampnotif/pkg/configs"
 	"github.com/we4tech/uampnotif/pkg/dispatcher"
-	"github.com/we4tech/uampnotif/pkg/integrations"
-	"github.com/we4tech/uampnotif/pkg/notifications"
+	"github.com/we4tech/uampnotif/pkg/notifiers"
 	"github.com/we4tech/uampnotif/pkg/testutils"
 	"log"
 	"os"
@@ -15,7 +15,7 @@ import (
 func TestDispatcher_Dispatch(t *testing.T) {
 	cfg := getNotificationConfig()
 	ctx := context.Background()
-	specsMap := map[string]*integrations.Spec{
+	specsMap := map[string]*configs.Spec{
 		"test": getIntegrationSpec(),
 	}
 	envVars := map[string]string{
@@ -82,22 +82,22 @@ func TestDispatcher_Dispatch(t *testing.T) {
 	})
 }
 
-func getIntegrationSpec() *integrations.Spec {
+func getIntegrationSpec() *configs.Spec {
 	dir, _ := os.Getwd()
-	configFile := path.Join(dir, "../../config/integrations/test.yml")
+	configFile := path.Join(dir, "../../config/configs/test.yml")
 
-	if spec, err := integrations.NewConfigParser().Read(configFile); err != nil {
+	if spec, err := configs.NewParser().Read(configFile); err != nil {
 		panic(err)
 	} else {
 		return spec
 	}
 }
 
-func getNotificationConfig() *notifications.Config {
+func getNotificationConfig() *notifiers.Config {
 	dir, _ := os.Getwd()
 	configFile := path.Join(dir, "../../config/test-fixtures/notifs-simple.yml")
 
-	cfgParser := notifications.NewConfigParser()
+	cfgParser := notifiers.NewParser()
 	if cfg, err := cfgParser.Read(configFile); err != nil {
 		panic(err)
 	} else {

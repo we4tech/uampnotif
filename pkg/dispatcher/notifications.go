@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/we4tech/uampnotif/pkg/clients"
-	"github.com/we4tech/uampnotif/pkg/integrations"
-	"github.com/we4tech/uampnotif/pkg/notifications"
+	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/notifiers"
+	"log"
 	"sync"
 )
 
@@ -19,21 +20,44 @@ func (d *dispatchError) Error() string {
 
 type notificationsDispatcher struct {
 	mockClient      clients.ClientImpl
-	notificationCfg *notifications.Config
-	specCfg         map[string]*integrations.Spec
-	params          map[string]string
+	notificationCfg *notifiers.Config
+	specCfg         map[string]*configs.Spec
 	envVars         map[string]string
 	events          chan DispatchEvent
+	globalParams    map[string]string
+	logger          *log.Logger
 }
 
+//
+// Dispatch triggers events for all notifiers using separate go-routine.
+//
 func (n *notificationsDispatcher) Dispatch(ctx context.Context) error {
+	n.logger.Println("Dispatching notifications")
+
 	wg := sync.WaitGroup{}
+	errs := make([]error, 0)
 	errCh := make(chan error)
+
+	go n.monitorEvents()
+	go func() {
+		for {
+			select {
+			case err := <-errCh:
+				errs = append(errs, err)
+			}
+		}
+	}()
 
 	// TODO(HK): By default all requests are async.
 	for _, notifier := range n.notificationCfg.Notifiers {
-		go func(notifier notifications.Notifier) {
-			wg.Add(1)
+		n.logger.Printf("Dispatching %s\n", notifier.Id)
+		wg.Add(1)
+
+		go func(notifier notifiers.Notifier) {
+			defer func() {
+				n.logger.Printf("Dispatched %s\n", notifier.Id)
+			}()
+
 			defer wg.Done()
 
 			if err := n.dispatchNotification(notifier); err != nil {
@@ -44,19 +68,14 @@ func (n *notificationsDispatcher) Dispatch(ctx context.Context) error {
 
 	wg.Wait()
 
-	if len(errCh) == 0 {
-		return nil
+	if len(errs) > 0 {
+		return &dispatchError{Errors: errs}
 	}
 
-	err := &dispatchError{Errors: make([]error, len(errCh))}
-	for i := 0; i < len(errCh); i++ {
-		err.Errors[i] = <-errCh
-	}
-
-	return err
+	return nil
 }
 
-func (n *notificationsDispatcher) isAsync(cfg *notifications.Setting) bool {
+func (n *notificationsDispatcher) isAsync(cfg *notifiers.Setting) bool {
 	if cfg == nil {
 		return n.notificationCfg.DefaultSettings.Async
 	}
@@ -68,7 +87,7 @@ func (n *notificationsDispatcher) SetMockClient(client clients.ClientImpl) {
 	n.mockClient = client
 }
 
-func (n *notificationsDispatcher) dispatchNotification(notifier notifications.Notifier) error {
+func (n *notificationsDispatcher) dispatchNotification(notifier notifiers.Notifier) error {
 	var (
 		retries    = 0
 		response   *clients.Response
@@ -78,7 +97,7 @@ func (n *notificationsDispatcher) dispatchNotification(notifier notifications.No
 	go n.trigger(InTransit, notifier, retries, nil, nil)
 
 restart:
-	client, err := clients.NewHttpRequest(n.specCfg[notifier.Id], n.params, n.envVars)
+	client, err := clients.NewHttpRequest(n.specCfg[notifier.Id], notifier.Params, n.envVars)
 	if err != nil {
 		goto errorHandler
 	}
@@ -113,7 +132,7 @@ errorHandler:
 
 func (n *notificationsDispatcher) trigger(
 	state DispatchState,
-	notifier notifications.Notifier,
+	notifier notifiers.Notifier,
 	retries int,
 	response *clients.Response,
 	err error,
@@ -128,7 +147,7 @@ func (n *notificationsDispatcher) trigger(
 	}
 }
 
-func (n *notificationsDispatcher) maxRetries(settings *notifications.Setting) int {
+func (n *notificationsDispatcher) maxRetries(settings *notifiers.Setting) int {
 	if settings == nil {
 		return n.notificationCfg.DefaultSettings.Retries
 	}
@@ -141,18 +160,29 @@ func (n *notificationsDispatcher) Channel() chan DispatchEvent {
 	return n.events
 }
 
+func (n *notificationsDispatcher) monitorEvents() {
+	for {
+		select {
+		case event := <-n.Channel():
+			n.logger.Printf("- %+v", event)
+		}
+	}
+}
+
 //
 // NewNotificationDispatcher returns an implementation of *Dispatcher* service.
 //
 func NewNotificationDispatcher(
-	specs map[string]*integrations.Spec,
-	config *notifications.Config,
+	logger *log.Logger,
+	specs map[string]*configs.Spec,
+	config *notifiers.Config,
 	params, envVars map[string]string,
 ) Dispatcher {
 	return &notificationsDispatcher{
+		logger:          logger,
 		specCfg:         specs,
 		notificationCfg: config,
-		params:          params,
+		globalParams:    params,
 		envVars:         envVars,
 		events:          make(chan DispatchEvent),
 	}

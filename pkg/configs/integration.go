@@ -1,4 +1,4 @@
-package integrations
+package configs
 
 //
 // Spec composes all relevant configuration together.
@@ -14,7 +14,7 @@ type Spec struct {
 // passed yamlConfig.
 //
 func NewSpec(yamlConfig []byte) (*Spec, error) {
-	dcp := NewConfigParser()
+	dcp := NewParser()
 
 	return dcp.ReadBytes(yamlConfig)
 }
