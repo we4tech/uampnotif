@@ -1,19 +1,19 @@
-package integrations
+package configs
 
 import (
 	"fmt"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"testing"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/templates"
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	_, err := NewDefaultConfigParser().Read("invalid-path.yaml")
+	_, err := NewParser().Read("invalid-path.yaml")
 
 	if err == nil {
 		t.Error("could not find ConfigNotFound error")
@@ -25,9 +25,8 @@ func TestReadShouldRaiseConfigNotFound(t *testing.T) {
 }
 
 func TestReadInternalRaiseConfigParsingError(t *testing.T) {
-	parser := NewDefaultConfigParser()
-	_, err := parser.readInternal(
-		[]byte("invalid_yaml: _invalid: _invalid"), "invalid.yaml")
+	parser := NewParser()
+	_, err := parser.ReadBytes([]byte("invalid_yaml: _invalid: _invalid"))
 
 	if err == nil {
 		t.Error("could not find error")
@@ -40,7 +39,7 @@ func TestReadInternalRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldReadConfigs(t *testing.T) {
 	dir, _ := os.Getwd()
-	rootPath := path.Join(dir, "../../config/integrations")
+	rootPath := path.Join(dir, "../../config/configs")
 	configFiles, err := ioutil.ReadDir(rootPath)
 
 	if err != nil {
@@ -63,7 +62,7 @@ func TestReadShouldReadConfigs(t *testing.T) {
 	}
 }
 
-func validateIntegration(integration *IntegrationSpec, t *testing.T) {
+func validateIntegration(integration *Spec, t *testing.T) {
 	ctx := buildContext(integration)
 
 	t.Run("should find name", func(t *testing.T) {
@@ -156,7 +155,7 @@ func validateIntegration(integration *IntegrationSpec, t *testing.T) {
 	})
 }
 
-func buildContext(integration *IntegrationSpec) *templates.TemplateContext {
+func buildContext(integration *Spec) *templates.TemplateContext {
 	params := make(map[string]string)
 	env := map[string]string{
 		"commit_hash":        "hello-commit-hash",
@@ -172,8 +171,8 @@ func buildContext(integration *IntegrationSpec) *templates.TemplateContext {
 	return ctx
 }
 
-func getIntegration(configFile string) (*IntegrationSpec, error) {
-	parser := NewDefaultConfigParser()
+func getIntegration(configFile string) (*Spec, error) {
+	parser := NewParser()
 
 	return parser.Read(configFile)
 }

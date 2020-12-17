@@ -1,7 +1,7 @@
 ##
 # Build vars
 #
-BUILD_DIR ?= build
+BUILD_DIR ?= ./
 SHELL=/bin/bash
 
 ##
@@ -12,18 +12,18 @@ OS = $(shell uname | tr A-Z a-z)
 
 .PHONY: run
 run:
-	go run cmd/uampnotif/main.go
+	go run ./cmd/uampnotif
 
 build:
 	@mkdir -p build
 
 .PHONY: build-linux
 build-linux: build
-	env GOOS=linux GOARCH=arm64 go build -o build/uampnotif-linux cmd/uampnotif/main.go
+	env GOOS=linux GOARCH=arm64 go build -o build/uampnotif-linux ./cmd/uampnotif
 
 .PHONY: build-mac
 build-mac: build
-	env GOOS=darwin GOARCH=386 go build -o build/uampnotif cmd/uampnotif/main.go
+	go build -o ${BUILD_DIR}/uampnotif ./cmd/uampnotif
 
 bin/gotestsum: bin/gotestsum-${GOTESTSUM_VERSION}
 	@ln -sf gotestsum-${GOTESTSUM_VERSION} bin/gotestsum

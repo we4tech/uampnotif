@@ -5,26 +5,26 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
 //
-// DefaultConfigParser represents the instance of the config parser.
+// parser represents the instance of the config parser.
 //
-type DefaultConfigParser struct {
+type parser struct {
 }
 
 //
-// NewDefaultConfigParser constructs and returns a instance of DefaultConfigParser.
+// NewParser constructs and returns a instance of parser.
 //
-func NewDefaultConfigParser() DefaultConfigParser {
-	return DefaultConfigParser{}
+func NewParser() Parser {
+	return &parser{}
 }
 
 //
-// Read from the specified appConfigYaml and converts into a Notifiers.
+// Read from the specified appConfigYaml and converts into a Config.
 //
-func (dcp DefaultConfigParser) Read(appConfigYaml string) (*Notifiers, error) {
+func (dcp *parser) Read(appConfigYaml string) (*Config, error) {
 	_, err := os.Stat(appConfigYaml)
 
 	if os.IsNotExist(err) {
@@ -40,11 +40,11 @@ func (dcp DefaultConfigParser) Read(appConfigYaml string) (*Notifiers, error) {
 	return dcp.readInternal(fileData, appConfigYaml)
 }
 
-func (dcp DefaultConfigParser) readInternal(
+func (dcp *parser) readInternal(
 	fileData []byte,
-	appConfigYaml string) (*Notifiers, error) {
+	appConfigYaml string) (*Config, error) {
 
-	var notifiers = &Notifiers{}
+	var notifiers = &Config{}
 	if err := yaml.Unmarshal(fileData, notifiers); err != nil {
 		return nil, common_errors.ConfigParsingError{File: appConfigYaml, Err: err}
 	}

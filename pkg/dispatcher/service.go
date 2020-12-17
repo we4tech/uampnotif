@@ -1,27 +1,27 @@
 package dispatcher
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/integrations"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/notifiers"
+	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/notifiers"
 )
 
-type service struct {
-	notifier *notifiers.Notifier
-	integrationSpecs map[string]integrations.IntegrationSpec
+type dispatcher struct {
+	notifier         *notifiers.Notifier
+	integrationSpecs map[string]configs.Spec
 }
 
 //
-// NewService returns an instance of service.
+// NewService returns an instance of dispatcher.
 //
-func NewService(notifier notifiers.Notifier) *service {
-	return &service{notifier: &notifier}
+func NewService(notifier notifiers.Notifier) *dispatcher {
+	return &dispatcher{notifier: &notifier}
 }
 
 //
 // LoadIntegrationSpecs iterates over the directory to load the integration
 // plugins.
 //
-func (s *service) LoadIntegrationSpecs(configPath string) error {
+func (s *dispatcher) LoadIntegrationSpecs(configPath string) error {
 	return nil
 }
 
@@ -29,6 +29,6 @@ func (s *service) LoadIntegrationSpecs(configPath string) error {
 // Dispatch the notification based on the configuration and raises error
 // when encounters.
 //
-func (s *service) Dispatch() error {
+func (s *dispatcher) Dispatch() error {
 	return nil
 }

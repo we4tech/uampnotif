@@ -1,16 +1,16 @@
 package notifiers
 
 //
-// Notifiers keeps a default settings and a list of notifiers.
+// Config keeps a default settings and a list of notifiers.
 //
-type Notifiers struct {
+type Config struct {
 	DefaultSettings Setting `yaml:"default_settings"`
 	Notifiers       []Notifier
 }
 
 //
 // Setting represents a default or a scoped setting for a or a group of
-// integrations.
+// configs.
 //
 type Setting struct {
 	Retries          int
@@ -24,17 +24,20 @@ type Setting struct {
 //
 type Notifier struct {
 	Id       string
-	Params   *Params
+	Params   Params
 	Settings *Setting
+
+	// Optional:
+	Desc string `yaml:"desc,omitempty"`
 }
 
 //
-// AppConfigParser interface to provide a way to interact with different
+// Parser interface to provide a way to interact with different
 // implementations.
 //
-type AppConfigParser interface {
+type Parser interface {
 	//
-	// Read a configuration yaml and convert into a Notifiers object.
+	// Read a configuration yaml and convert into a Config object.
 	//
-	Read(configYamlFile string) (*Notifiers, error)
+	Read(configYamlFile string) (*Config, error)
 }

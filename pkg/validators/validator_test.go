@@ -1,15 +1,15 @@
 package validators
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/templates"
 	"testing"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/integrations"
+	"github.com/we4tech/uampnotif/pkg/configs"
 )
 
 var IntegrationTestTables = []struct {
 	testName         string
-	integration      *integrations.IntegrationSpec
+	integration      *configs.Spec
 	expectValid      bool
 	expectedErrorsOn []string
 }{
@@ -60,8 +60,8 @@ request:
 		[]string{}},
 }
 
-func buildIntegration(config string) *integrations.IntegrationSpec {
-	spec, _ := integrations.NewIntegrationSpec([]byte(config))
+func buildIntegration(config string) *configs.Spec {
+	spec, _ := configs.NewSpec([]byte(config))
 
 	return spec
 }

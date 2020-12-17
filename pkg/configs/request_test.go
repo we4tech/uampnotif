@@ -1,7 +1,7 @@
-package integrations
+package configs
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/templates"
 	"testing"
 )
 

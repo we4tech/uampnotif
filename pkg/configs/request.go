@@ -1,8 +1,8 @@
-package integrations
+package configs
 
 import (
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/templates"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/templates"
 )
 
 type request struct {

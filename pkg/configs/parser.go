@@ -1,27 +1,27 @@
-package integrations
+package configs
 
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
-type DefaultConfigParser struct{}
+type parser struct{}
 
 //
-// NewDefaultConfigParser constructs an instance.
+// NewParser constructs an instance.
 //
-func NewDefaultConfigParser() DefaultConfigParser {
-	return DefaultConfigParser{}
+func NewParser() Parser {
+	return &parser{}
 }
 
 //
-// Read takes the configYamlFile and converts into IntegrationSpec after
+// Read takes the configYamlFile and converts into Spec after
 // successful parsing struct.
 //
-func (dcp DefaultConfigParser) Read(configYamlFile string) (*IntegrationSpec, error) {
+func (dcp *parser) Read(configYamlFile string) (*Spec, error) {
 	_, err := os.Stat(configYamlFile)
 
 	if os.IsNotExist(err) {
@@ -36,10 +36,14 @@ func (dcp DefaultConfigParser) Read(configYamlFile string) (*IntegrationSpec, er
 	return dcp.readInternal(fileData, configYamlFile)
 }
 
-func (dcp DefaultConfigParser) readInternal(
+func (dcp *parser) ReadBytes(configYaml []byte) (*Spec, error) {
+	return dcp.readInternal(configYaml, "config.yaml-string")
+}
+
+func (dcp *parser) readInternal(
 	fileData []byte,
-	configYamlFile string) (*IntegrationSpec, error) {
-	var integration = &IntegrationSpec{}
+	configYamlFile string) (*Spec, error) {
+	var integration = &Spec{}
 
 	if err := yaml.Unmarshal(fileData, integration); err != nil {
 		return nil, common_errors.ConfigParsingError{File: configYamlFile, Err: err}

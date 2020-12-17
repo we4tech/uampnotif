@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/WeConnect/hello-tools/uampnotif/pkg/common_errors"
+	"github.com/we4tech/uampnotif/pkg/common_errors"
 )
 
 func TestReadShouldRaiseConfigNotFound(t *testing.T) {
-	parser := NewDefaultConfigParser()
+	parser := NewParser()
 	_, err := parser.Read("../invalid-file-path.yaml")
 
 	if err == nil {
@@ -27,7 +27,8 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 	invalidYaml := []byte("settings: hello: hello")
 	invalidYamlFile := "a-file-name-does-matter.yml"
 
-	parser := NewDefaultConfigParser()
+	parser := &parser{}
+
 	_, err := parser.readInternal(invalidYaml, invalidYamlFile)
 
 	if err == nil {
@@ -43,7 +44,7 @@ func TestReadShouldParseConfig(t *testing.T) {
 	dir, _ := os.Getwd()
 	configFile := path.Join(dir, "../../config/notifiers.yml")
 
-	parser := NewDefaultConfigParser()
+	parser := NewParser()
 	notifiers, err := parser.Read(configFile)
 
 	if err != nil {
@@ -53,7 +54,7 @@ func TestReadShouldParseConfig(t *testing.T) {
 	validateNotifiers(notifiers, t)
 }
 
-func validateNotifiers(notifiers *Notifiers, t *testing.T) {
+func validateNotifiers(notifiers *Config, t *testing.T) {
 	t.Run("should have default settings", func(t *testing.T) {
 		if notifiers.DefaultSettings.Retries != 3 {
 			t.Error("could not find retries == 3")
@@ -103,11 +104,11 @@ func validateNotifiers(notifiers *Notifiers, t *testing.T) {
 	})
 }
 
-func findNotifier(name string, notifiers *Notifiers) (Notifier, bool) {
+func findNotifier(name string, config *Config) (Notifier, bool) {
 	found := false
 	var notifier Notifier
 
-	for _, n := range notifiers.Notifiers {
+	for _, n := range config.Notifiers {
 		if n.Id == name {
 			found = true
 			notifier = n
