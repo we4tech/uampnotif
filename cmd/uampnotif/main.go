@@ -19,26 +19,54 @@ func init() {
 }
 
 func main() {
-	logger.Println("Loading configuration...")
-	parser := notifiers.NewParser()
+	opts := parseFlags()
 
-	config, err := parser.Read(opts.NotifierFile)
+	wd, err := os.Getwd()
 	if err != nil {
-		log.Panicf("could not parse file from %s. error: %s", opts.NotifierFile, err)
+		log.Panic(err)
 	}
 
-	specsMap := buildSpecsMap()
+	logger.Println("Loading configuration...")
+
+	parser := notifiers.NewParser()
+	notifierFile := path.Join(wd, opts.NotifierFile)
+
+	config, err := parser.Read(notifierFile)
+	if err != nil {
+		log.Panicf("could not parse file from %s. error: %s", notifierFile, err)
+	}
+
+	specsMap := buildSpecsMap(opts, wd)
 	params := make(map[string]string)
 	envVars := buildEnvVarsMap()
-	ctx := context.Background()
+	pCtx := context.Background()
+	ctx, cancel := context.WithCancel(pCtx)
 
 	logger.Println("Preparing dispatcher")
 
 	d := dispatcher.NewNotificationDispatcher(logger, specsMap, config, params, envVars)
 
+	go monitorEvents(ctx, logger, d)
+
 	if err := d.Dispatch(ctx); err != nil {
 		log.Panicf("failed to dispatch successfully. error: %s", err)
 	}
+
+	cancel()
+}
+
+func monitorEvents(ctx context.Context, logger *log.Logger, d dispatcher.Dispatcher) {
+	for {
+		select {
+		case <-ctx.Done():
+			goto returnCtl
+		case event := <-d.Events():
+			logger.Printf("Event: %+v\n", event)
+		}
+	}
+
+returnCtl:
+	return
 }
 
 func buildEnvVarsMap() map[string]string {
@@ -53,13 +81,8 @@ func buildEnvVarsMap() map[string]string {
 	return envVars
 }
 
-func buildSpecsMap() map[string]*configs.Spec {
+func buildSpecsMap(opts *cliOpts, wd string) map[string]*configs.Spec {
 	specsMap := make(map[string]*configs.Spec)
-
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Panic(err)
-	}
 
 	fullPath := path.Join(wd, opts.ConfigDir)
 

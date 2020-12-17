@@ -14,10 +14,8 @@ func (o *cliOpts) isEmpty() bool {
 	return o.ConfigDir == "" || o.NotifierFile == ""
 }
 
-var opts *cliOpts
-
-func init() {
-	opts = &cliOpts{}
+var parseFlags = func() *cliOpts {
+	opts := &cliOpts{}
 
 	flag.StringVar(&opts.NotifierFile, "n", "", "(Required) Locate notifiers.yml file")
 	flag.StringVar(&opts.ConfigDir, "d", "", "(Required) Locate notifiers config directory")
@@ -29,4 +27,6 @@ func init() {
 
 		os.Exit(1)
 	}
+
+	return opts
 }

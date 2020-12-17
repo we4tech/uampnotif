@@ -15,8 +15,10 @@ notifiers:
     desc: Test1
     params:
       api_key: hello-world-api-key
+      app_id: app-id-1
 
   - id: test
     desc: Test2
     params:
       api_key: hello-world-api-key-2
+      app_id: app-id-1

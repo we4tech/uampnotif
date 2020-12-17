@@ -24,52 +24,60 @@ type notificationsDispatcher struct {
 	specCfg         map[string]*configs.Spec
 	envVars         map[string]string
 	events          chan DispatchEvent
+	mutex           sync.Mutex
+	done            chan struct{}
 	globalParams    map[string]string
 	logger          *log.Logger
 }
 
 //
+// Done returns an error channel, data is only arrive whenever the dipatching process is done.
+//
+func (n *notificationsDispatcher) Done() chan struct{} {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
+	if n.done == nil {
+		n.done = make(chan struct{})
+	}
+
+	return n.done
+}
+
+//
 // Dispatch triggers events for all notifiers using separate go-routine.
 //
-func (n *notificationsDispatcher) Dispatch(ctx context.Context) error {
+// TODO(HK): Add support for SYNC requests.
+func (n *notificationsDispatcher) Dispatch(_ context.Context) error {
 	n.logger.Println("Dispatching notifications")
 
-	wg := sync.WaitGroup{}
-	errs := make([]error, 0)
+	wg := &sync.WaitGroup{}
 	errCh := make(chan error)
+	errs := make([]error, 0)
 
-	go n.monitorEvents()
-	go func() {
-		for {
-			select {
-			case err := <-errCh:
-				errs = append(errs, err)
-			}
-		}
-	}()
+	wg.Add(len(n.notificationCfg.Notifiers))
 
-	// TODO(HK): By default all requests are async.
-	for _, notifier := range n.notificationCfg.Notifiers {
-		n.logger.Printf("Dispatching %s\n", notifier.Id)
-		wg.Add(1)
-
-		go func(notifier notifiers.Notifier) {
-			defer func() {
-				n.logger.Printf("Dispatched %s\n", notifier.Id)
-			}()
-
-			defer wg.Done()
-
-			if err := n.dispatchNotification(notifier); err != nil {
-				errCh <- err
-			}
-		}(notifier)
-	}
+	go n.dispatchInAsync(errCh, wg)
+	go n.accumulateErrors(errCh, errs)
 
 	wg.Wait()
 
+	close(errCh)
+
+	if n.events != nil {
+		close(n.events)
+	}
+
+	if n.done != nil {
+		close(n.done)
+	}
+
 	if len(errs) > 0 {
+		n.logger.Println("Failed to dispatch all notifications")
+
 		return &dispatchError{Errors: errs}
+	} else {
+		n.logger.Println("Successfully dispatched all notifications")
 	}
 
 	return nil
@@ -87,14 +95,18 @@ func (n *notificationsDispatcher) SetMockClient(client clients.ClientImpl) {
 	n.mockClient = client
 }
 
-func (n *notificationsDispatcher) dispatchNotification(notifier notifiers.Notifier) error {
+// TODO(HK): Use context
+func (n *notificationsDispatcher) dispatchNotification(
+	_ context.Context,
+	notifier notifiers.Notifier,
+) error {
 	var (
 		retries    = 0
 		response   *clients.Response
 		maxRetries = n.maxRetries(notifier.Settings)
 	)
 
-	go n.trigger(InTransit, notifier, retries, nil, nil)
+	n.trigger(InTransit, notifier, retries, nil, nil)
 
 restart:
 	client, err := clients.NewHttpRequest(n.specCfg[notifier.Id], notifier.Params, n.envVars)
@@ -106,18 +118,19 @@ restart:
 		client.SetClient(n.mockClient)
 	}
 
+	// TODO(HK): Handle template error vs network error
 	response, err = client.SendRequest()
 	if err != nil {
 		goto errorHandler
 	}
 
 	if response.IsOK() {
-		go n.trigger(Success, notifier, retries, response, nil)
+		n.trigger(Success, notifier, retries, response, nil)
 		return nil
 	}
 
 	if retries < maxRetries {
-		go n.trigger(Retrying, notifier, retries, response, nil)
+		n.trigger(Retrying, notifier, retries, response, nil)
 
 		retries++
 
@@ -125,7 +138,7 @@ restart:
 	}
 
 errorHandler:
-	go n.trigger(Error, notifier, retries, response, err)
+	n.trigger(Error, notifier, retries, response, err)
 
 	return err
 }
@@ -137,6 +150,10 @@ func (n *notificationsDispatcher) trigger(
 	response *clients.Response,
 	err error,
 ) {
+	if n.events == nil {
+		return
+	}
+
 	n.events <- DispatchEvent{
 		State:        state,
 		NotifierId:   notifier.Id,
@@ -155,17 +172,49 @@ func (n *notificationsDispatcher) maxRetries(settings *notifiers.Setting) int {
 	return settings.Retries
 }
 
-// Channel returns the DispatchEvent channel
-func (n *notificationsDispatcher) Channel() chan DispatchEvent {
+// Channel returns a lazily initiated DispatchEvent channel.
+func (n *notificationsDispatcher) Events() chan DispatchEvent {
+	if n.events != nil {
+		return n.events
+	}
+
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
+
+	if n.events == nil {
+		n.events = make(chan DispatchEvent)
+	}
+
 	return n.events
 }
 
-func (n *notificationsDispatcher) monitorEvents() {
+func (n *notificationsDispatcher) dispatchInAsync(errCh chan error, wg *sync.WaitGroup) {
+	ctx := context.Background()
+
+	for _, notifier := range n.notificationCfg.Notifiers {
+		n.logger.Printf("Dispatching %s\n", notifier.Id)
+
+		go func(notifier notifiers.Notifier) {
+			defer wg.Done()
+
+			if err := n.dispatchNotification(ctx, notifier); err != nil {
+				errCh <- err
+				n.logger.Printf("Failed to dispatched id:%s\n", notifier.Id)
+			} else {
+				n.logger.Printf("Successfully dispatched id:%s\n", notifier.Id)
+			}
+		}(notifier)
+	}
+}
+
+func (n *notificationsDispatcher) accumulateErrors(ch chan error, errs []error) {
 	for {
-		select {
-		case event := <-n.Channel():
-			n.logger.Printf("- %+v", event)
+		err := <-ch
+		if err == nil {
+			break
 		}
+
+		errs = append(errs, err)
 	}
 }
 
@@ -184,6 +233,5 @@ func NewNotificationDispatcher(
 		notificationCfg: config,
 		globalParams:    params,
 		envVars:         envVars,
-		events:          make(chan DispatchEvent),
 	}
 }

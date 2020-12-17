@@ -2,6 +2,7 @@ package dispatcher_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/we4tech/uampnotif/pkg/configs"
 	"github.com/we4tech/uampnotif/pkg/dispatcher"
 	"github.com/we4tech/uampnotif/pkg/notifiers"
@@ -11,6 +12,8 @@ import (
 	"path"
 	"testing"
 )
+
+var logger = log.New(os.Stdout, "[testbin] ", log.Lshortfile)
 
 func TestDispatcher_Dispatch(t *testing.T) {
 	cfg := getNotificationConfig()
@@ -29,8 +32,19 @@ func TestDispatcher_Dispatch(t *testing.T) {
 	t.Run("dispatches without any error", func(t *testing.T) {
 		mockClient := testutils.NewMockHttpClient(200, []byte("[]"))
 
-		d := dispatcher.NewNotificationDispatcher(specsMap, cfg, params, envVars)
+		d := dispatcher.NewNotificationDispatcher(logger, specsMap, cfg, params, envVars)
 		d.SetMockClient(mockClient)
+
+		go func() {
+			for {
+				event := <-d.Events()
+				if event.NotifierId == "" {
+					break
+				}
+
+				fmt.Printf("Event: %+v\n", event)
+			}
+		}()
 
 		if err := d.Dispatch(ctx); err != nil {
 			t.Error("[Test] Error: ", err)
@@ -38,9 +52,10 @@ func TestDispatcher_Dispatch(t *testing.T) {
 	})
 
 	t.Run("dispatches events", func(t *testing.T) {
+		ctx := context.Background()
 		mockClient := testutils.NewMockHttpClient(200, []byte("[]"))
 
-		d := dispatcher.NewNotificationDispatcher(specsMap, cfg, params, envVars)
+		d := dispatcher.NewNotificationDispatcher(logger, specsMap, cfg, params, envVars)
 		d.SetMockClient(mockClient)
 
 		go func() { _ = d.Dispatch(ctx) }()
@@ -49,25 +64,27 @@ func TestDispatcher_Dispatch(t *testing.T) {
 		inTransitCount, successCount, errorCount := 0, 0, 0
 
 		for {
-			lastEvent = <-d.Channel()
+			select {
+			case <-d.Done():
+				fmt.Println("Done test")
+				goto continueTest
 
-			log.Printf("Rcv: %+v", lastEvent)
+			case lastEvent = <-d.Events():
+				log.Printf("Rcv: %+v", lastEvent)
 
-			if lastEvent.State == dispatcher.InTransit {
-				inTransitCount++
-			} else if lastEvent.State == dispatcher.Error {
-				t.Error("expected success")
-				errorCount++
-			} else if lastEvent.State == dispatcher.Success {
-				log.Println("Successfully dispatched")
-				successCount++
-			}
-
-			if successCount+errorCount > 1 {
-				break
+				if lastEvent.State == dispatcher.InTransit {
+					inTransitCount++
+				} else if lastEvent.State == dispatcher.Error {
+					t.Error("expected success")
+					errorCount++
+				} else if lastEvent.State == dispatcher.Success {
+					log.Println("Successfully dispatched")
+					successCount++
+				}
 			}
 		}
 
+	continueTest:
 		if inTransitCount != 2 {
 			t.Error()
 		}
@@ -95,7 +112,7 @@ func getIntegrationSpec() *configs.Spec {
 
 func getNotificationConfig() *notifiers.Config {
 	dir, _ := os.Getwd()
-	configFile := path.Join(dir, "../../config/test-fixtures/notifs-simple.yml")
+	configFile := path.Join(dir, "../../config/test-fixtures/notifiers.yml")
 
 	cfgParser := notifiers.NewParser()
 	if cfg, err := cfgParser.Read(configFile); err != nil {

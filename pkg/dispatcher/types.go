@@ -34,6 +34,7 @@ type DispatchEvent struct {
 //
 type Dispatcher interface {
 	Dispatch(ctx context.Context) error
-	Channel() chan DispatchEvent
+	Events() chan DispatchEvent
+	Done() chan struct{}
 	SetMockClient(impl clients.ClientImpl)
 }
