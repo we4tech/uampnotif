@@ -37,7 +37,7 @@ bin/gotestsum-${GOTESTSUM_VER}:
 	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VER}/gotestsum_${GOTESTSUM_VER}_${OS}_amd64.tar.gz | tar -zOxf - gotestsum > ./bin/gotestsum-${GOTESTSUM_VER} && chmod +x ./bin/gotestsum-${GOTESTSUM_VER}
 
 bin/golangci-lint:
-	makedir -p ./bin
+	mkdir -p ./bin
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin ${GOLANGCI_VER}
 
 verify: bin/golangci-lint ## Run static code analyzers
