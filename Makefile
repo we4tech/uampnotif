@@ -1,39 +1,51 @@
 ##
 # Build vars
 #
-BUILD_DIR ?= ./
+BUILD_DIR ?= ./build
 SHELL=/bin/bash
 
 ##
 # Dependencies
 #
-GOTESTSUM_VERSION = 0.4.2
+GOLANGCI_VER = v1.33.0
+GOTESTSUM_VER = 0.4.2
 OS = $(shell uname | tr A-Z a-z)
 
 .PHONY: run
-run:
+run: ## Run ./cmd/uampnotif
 	go run ./cmd/uampnotif
 
 build:
-	@mkdir -p build
+	@mkdir -p ${BUILD_DIR}
+
+clean: ## Clean up build directory
+	rm -rf ${BUILD_DIR}
 
 .PHONY: build-linux
-build-linux: build
+build-linux: build ## Build targeting for linux
 	env GOOS=linux GOARCH=arm64 go build -o build/uampnotif-linux ./cmd/uampnotif
 
 .PHONY: build-mac
-build-mac: build
+build-mac: build ## Build targeting for Mac
 	go build -o ${BUILD_DIR}/uampnotif ./cmd/uampnotif
+	ls -la ${BUILD_DIR}
 
-bin/gotestsum: bin/gotestsum-${GOTESTSUM_VERSION}
-	@ln -sf gotestsum-${GOTESTSUM_VERSION} bin/gotestsum
-bin/gotestsum-${GOTESTSUM_VERSION}:
+bin/gotestsum: bin/gotestsum-${GOTESTSUM_VER}
+	@ln -sf gotestsum-${GOTESTSUM_VER} bin/gotestsum
+bin/gotestsum-${GOTESTSUM_VER}:
 	@mkdir -p bin
-	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_${OS}_amd64.tar.gz | tar -zOxf - gotestsum > ./bin/gotestsum-${GOTESTSUM_VERSION} && chmod +x ./bin/gotestsum-${GOTESTSUM_VERSION}
+	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VER}/gotestsum_${GOTESTSUM_VER}_${OS}_amd64.tar.gz | tar -zOxf - gotestsum > ./bin/gotestsum-${GOTESTSUM_VER} && chmod +x ./bin/gotestsum-${GOTESTSUM_VER}
+
+bin/golangci-lint:
+	makedir -p ./bin
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin ${GOLANGCI_VER}
+
+verify: bin/golangci-lint ## Run static code analyzers
+	bin/golangci-lint run
 
 .PHONY: test
 test: FMT ?= "standard-verbose"
-test: bin/gotestsum
+test: bin/gotestsum ## Run whole test suite
 	bin/gotestsum -f $(FMT) $(filter-out $@,$(MAKECMDGOALS))
 
 %:
