@@ -5,16 +5,6 @@ import (
 	"testing"
 )
 
-type searchableMap map[string]string
-
-func (sm *searchableMap) Find(needle string) string {
-	return (*sm)[needle]
-}
-
-func (sm *searchableMap) Exists(needle string) bool {
-	panic("implement me")
-}
-
 func TestExecuteTemplateShouldReturnString(t *testing.T) {
 	params := map[string]string{
 		"host": "example.org",

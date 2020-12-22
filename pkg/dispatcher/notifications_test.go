@@ -115,10 +115,11 @@ func getNotificationConfig() *notifiers.Config {
 	configFile := path.Join(dir, "../../config/test-fixtures/notifiers.yml")
 
 	cfgParser := notifiers.NewParser()
-	if cfg, err := cfgParser.Read(configFile); err != nil {
+
+	cfg, err := cfgParser.Read(configFile)
+	if err != nil {
 		panic(err)
-	} else {
-		return cfg
 	}
-	return nil
+
+	return cfg
 }
