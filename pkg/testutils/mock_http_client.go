@@ -9,7 +9,6 @@ import (
 
 type MockHttpClient struct {
 	ReceivedRequest *http.Request
-	sentResponse    *http.Response
 
 	responseCode int
 	responseBody []byte

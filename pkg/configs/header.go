@@ -40,15 +40,21 @@ func (h *Headers) IsEmpty() bool {
 type header struct {
 	Name        string
 	ValueTmpl   templates.GoTmpl `yaml:"value_tmpl"`
-	parsedValue string
+	parsedValue *string
 }
 
 func (h *header) GetValue(ctx *templates.TemplateContext) (string, error) {
+	if h.parsedValue != nil {
+		return *h.parsedValue, nil
+	}
+
 	value, err := templates.ExecuteTemplate("header.valueTmpl", h.ValueTmpl, ctx)
 
 	if err != nil {
 		return "", err
 	}
+
+	h.parsedValue = &value
 
 	return value, nil
 }

@@ -53,16 +53,16 @@ func (n *notificationsDispatcher) Dispatch(_ context.Context) error {
 
 	wg := &sync.WaitGroup{}
 	errCh := make(chan error)
-	errs := make([]error, 0)
 
 	wg.Add(len(n.notificationCfg.Notifiers))
 
 	go n.dispatchInAsync(errCh, wg)
-	go n.accumulateErrors(errCh, errs)
 
 	wg.Wait()
 
 	close(errCh)
+
+	errs := n.accumulateErrors(errCh)
 
 	if n.events != nil {
 		close(n.events)
@@ -81,14 +81,6 @@ func (n *notificationsDispatcher) Dispatch(_ context.Context) error {
 	}
 
 	return nil
-}
-
-func (n *notificationsDispatcher) isAsync(cfg *notifiers.Setting) bool {
-	if cfg == nil {
-		return n.notificationCfg.DefaultSettings.Async
-	}
-
-	return cfg.Async
 }
 
 func (n *notificationsDispatcher) SetMockClient(client clients.ClientImpl) {
@@ -207,7 +199,9 @@ func (n *notificationsDispatcher) dispatchInAsync(errCh chan error, wg *sync.Wai
 	}
 }
 
-func (n *notificationsDispatcher) accumulateErrors(ch chan error, errs []error) {
+func (n *notificationsDispatcher) accumulateErrors(ch chan error) []error {
+	errs := make([]error, 0)
+
 	for {
 		err := <-ch
 		if err == nil {
@@ -216,6 +210,8 @@ func (n *notificationsDispatcher) accumulateErrors(ch chan error, errs []error) 
 
 		errs = append(errs, err)
 	}
+
+	return errs
 }
 
 //
