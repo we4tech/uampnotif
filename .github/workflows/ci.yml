@@ -6,6 +6,7 @@ name: CI
 on:
   push:
     branches:
+      - *
   tags:
     - v*
   release:
