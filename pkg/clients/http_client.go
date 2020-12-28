@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/receivers"
 	"github.com/we4tech/uampnotif/pkg/templates"
 	"github.com/we4tech/uampnotif/pkg/validators"
 )
@@ -51,13 +51,14 @@ type httpClient struct {
 	client  ClientImpl
 	request *http.Request
 
-	spec    *configs.Spec
+	spec    *receivers.Spec
 	tmplCtx *templates.TemplateContext
 
 	url     string
 	method  string
 	headers map[string]string
 	body    string
+	logger  *log.Logger
 }
 
 func (c *httpClient) SendRequest() (*Response, error) {
@@ -98,14 +99,17 @@ func (c *httpClient) validate() (bool, validators.ValidationErrors) {
 // a successful receivedRequest.
 //
 func NewHttpRequest(
-	spec *configs.Spec,
+	spec *receivers.Spec,
 	parameters map[string]string,
-	envVars map[string]string) (Client, error) {
+	envVars map[string]string,
+	logger *log.Logger,
+) (Client, error) {
 
 	client := &httpClient{
 		tmplCtx: templates.NewTemplateContext(parameters, envVars),
 		spec:    spec,
 		method:  strings.ToUpper(spec.Request.Method),
+		logger:  logger,
 	}
 
 	if valid, errors := client.validate(); !valid {
@@ -165,7 +169,7 @@ func (c *httpClient) execute() (*Response, error) {
 		if body, err := ioutil.ReadAll(res.Body); err != nil {
 			return nil, clientRequestError{errorAt: "Request.ReadingBody", err: err}
 		} else {
-			log.Printf(
+			c.logger.Printf(
 				"execute: Received response for method:%s from "+
 					"url:%s status:%d\n",
 				c.method, c.getPartialUrl(), res.StatusCode)
@@ -180,8 +184,8 @@ func (c *httpClient) execute() (*Response, error) {
 }
 
 func (c *httpClient) createRequest() error {
-	log.Printf(
-		"sendPostRequest: Sending method:%s to url:%s\n",
+	c.logger.Printf(
+		"createRequest: Sending method:%s to url:%s\n",
 		c.method, c.getPartialUrl())
 
 	request, err := http.NewRequest(
@@ -200,7 +204,7 @@ func (c *httpClient) buildHeaders() error {
 	c.headers = make(map[string]string)
 
 	err := c.spec.Request.Headers.ForEach(
-		func(i int, pHeader configs.ParsedHeader) (bool, error) {
+		func(i int, pHeader receivers.ParsedHeader) (bool, error) {
 			if value, err := pHeader.GetValue(c.tmplCtx); err != nil {
 				return true, clientRequestError{
 					errorAt: fmt.Sprintf("Request.Headers.%s", pHeader.GetName()),

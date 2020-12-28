@@ -13,7 +13,7 @@ OS = $(shell uname | tr A-Z a-z)
 
 .PHONY: run
 run: ## Run ./cmd/uampnotif
-	go run ./cmd/uampnotif
+	go run ./cmd/uampnotif $(ARGS)
 
 build:
 	@mkdir -p ${BUILD_DIR}

@@ -1,4 +1,4 @@
-package configs
+package receivers
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func TestReadInternalRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldReadConfigs(t *testing.T) {
 	dir, _ := os.Getwd()
-	rootPath := path.Join(dir, "../../config/configs")
+	rootPath := path.Join(dir, "../../test-configs/receivers")
 	configFiles, err := ioutil.ReadDir(rootPath)
 
 	if err != nil {

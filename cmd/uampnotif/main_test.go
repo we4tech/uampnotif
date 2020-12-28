@@ -15,8 +15,8 @@ var commitHash = "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc"
 
 func TestMainWithHttpServer(t *testing.T) {
 	opts := &cliOpts{
-		"../../config/testconfigs/notifiers.yml",
-		"../../config/testconfigs/configs",
+		"../../test-configs/notification2.yml",
+		"../../test-configs/receivers-1",
 	}
 
 	server := runServer(t)

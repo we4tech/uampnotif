@@ -1,4 +1,4 @@
-package configs
+package receivers
 
 import (
 	"github.com/we4tech/uampnotif/pkg/common_errors"

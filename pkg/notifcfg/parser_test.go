@@ -1,4 +1,4 @@
-package notifiers
+package notifcfg
 
 import (
 	"fmt"
@@ -42,52 +42,52 @@ func TestReadInternalShouldRaiseConfigParsingError(t *testing.T) {
 
 func TestReadShouldParseConfig(t *testing.T) {
 	dir, _ := os.Getwd()
-	configFile := path.Join(dir, "../../config/notifiers.yml")
+	configFile := path.Join(dir, "../../test-configs/notification.yml")
 
 	parser := NewParser()
-	notifiers, err := parser.Read(configFile)
+	cfg, err := parser.Read(configFile)
 
 	if err != nil {
-		t.Errorf("could not parse notifiers.yml. Error - %s", err)
+		t.Errorf("could not parse notification.yml. Error - %s", err)
 	}
 
-	validateNotifiers(notifiers, t)
+	validateConfig(cfg, t)
 }
 
-func validateNotifiers(notifiers *Config, t *testing.T) {
+func validateConfig(cfg *Config, t *testing.T) {
 	t.Run("should have default settings", func(t *testing.T) {
-		if notifiers.DefaultSettings.Retries != 3 {
+		if cfg.DefaultSettings.Retries != 3 {
 			t.Error("could not find retries == 3")
 		}
 
-		if !notifiers.DefaultSettings.Async {
+		if !cfg.DefaultSettings.Async {
 			t.Error("could not find async == true")
 		}
 
-		if notifiers.DefaultSettings.OnError != "ignore" {
+		if cfg.DefaultSettings.OnError != "ignore" {
 			t.Error("could not find on_error: ignore")
 		}
 
-		if len(notifiers.DefaultSettings.OnErrorNotifiers) != 1 {
-			t.Error("could not find len(on_error_notifiers) == 1")
+		if len(cfg.DefaultSettings.OnErrorReceivers) != 1 {
+			t.Error("could not find len(on_error_receivers) == 1")
 		}
 	})
 
-	expectedNotifiers := []string{"newrelic", "rollbar", "slack", "sox-auditor"}
+	expectedReceivers := []string{"newrelic", "rollbar", "slack", "sox-auditor"}
 
-	for _, notifId := range expectedNotifiers {
+	for _, receiverId := range expectedReceivers {
 		t.Run(
-			fmt.Sprintf("should find notifier - %s", notifId),
+			fmt.Sprintf("should find receiver - %s", receiverId),
 			func(t *testing.T) {
-				_, found := findNotifier(notifId, notifiers)
+				_, found := findReceiver(receiverId, cfg)
 
 				if !found {
-					t.Errorf("could not find - %s", notifId)
+					t.Errorf("could not find - %s", receiverId)
 				}
 			})
 
 		t.Run("should have parameters", func(t *testing.T) {
-			n, _ := findNotifier(notifId, notifiers)
+			n, _ := findReceiver(receiverId, cfg)
 
 			if n.Params.IsEmpty() {
 				t.Errorf("could not find parameters")
@@ -96,7 +96,7 @@ func validateNotifiers(notifiers *Config, t *testing.T) {
 	}
 
 	t.Run("should have settings for sox-auditor", func(t *testing.T) {
-		n, _ := findNotifier("sox-auditor", notifiers)
+		n, _ := findReceiver("sox-auditor", cfg)
 
 		if n.Settings.OnError != "fatal" {
 			t.Errorf("could not find setting.on_error")
@@ -104,16 +104,16 @@ func validateNotifiers(notifiers *Config, t *testing.T) {
 	})
 }
 
-func findNotifier(name string, config *Config) (Notifier, bool) {
+func findReceiver(name string, config *Config) (Receiver, bool) {
 	found := false
-	var notifier Notifier
+	var receiver Receiver
 
-	for _, n := range config.Notifiers {
+	for _, n := range config.Receivers {
 		if n.Id == name {
 			found = true
-			notifier = n
+			receiver = n
 		}
 	}
 
-	return notifier, found
+	return receiver, found
 }

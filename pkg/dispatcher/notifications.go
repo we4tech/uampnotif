@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/we4tech/uampnotif/pkg/clients"
-	"github.com/we4tech/uampnotif/pkg/configs"
-	"github.com/we4tech/uampnotif/pkg/notifiers"
+	"github.com/we4tech/uampnotif/pkg/notifcfg"
+	"github.com/we4tech/uampnotif/pkg/receivers"
 	"log"
 	"sync"
 )
@@ -20,8 +20,8 @@ func (d *dispatchError) Error() string {
 
 type notificationsDispatcher struct {
 	mockClient      clients.ClientImpl
-	notificationCfg *notifiers.Config
-	specCfg         map[string]*configs.Spec
+	notificationCfg *notifcfg.Config
+	specCfg         map[string]*receivers.Spec
 	envVars         map[string]string
 	events          chan DispatchEvent
 	mutex           sync.Mutex
@@ -45,24 +45,31 @@ func (n *notificationsDispatcher) Done() chan struct{} {
 }
 
 //
-// Dispatch triggers events for all notifiers using separate go-routine.
+// Dispatch triggers events for all notifcfg using separate go-routine.
 //
 // TODO(HK): Add support for SYNC requests.
 func (n *notificationsDispatcher) Dispatch(_ context.Context) error {
-	n.logger.Println("Dispatching notifications")
-
 	wg := &sync.WaitGroup{}
 	errCh := make(chan error)
+	errs := make([]error, 0)
+	wgDone := false
 
-	wg.Add(len(n.notificationCfg.Notifiers))
+	wg.Add(len(n.notificationCfg.Receivers))
 
 	go n.dispatchInAsync(errCh, wg)
+	go func() {
+		for !wgDone {
+			if err := <-errCh; err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}()
 
 	wg.Wait()
 
-	close(errCh)
+	wgDone = true
 
-	errs := n.accumulateErrors(errCh)
+	close(errCh)
 
 	if n.events != nil {
 		close(n.events)
@@ -90,18 +97,18 @@ func (n *notificationsDispatcher) SetMockClient(client clients.ClientImpl) {
 // TODO(HK): Use context
 func (n *notificationsDispatcher) dispatchNotification(
 	_ context.Context,
-	notifier notifiers.Notifier,
+	receiver notifcfg.Receiver,
 ) error {
 	var (
 		retries    = 0
 		response   *clients.Response
-		maxRetries = n.maxRetries(notifier.Settings)
+		maxRetries = n.maxRetries(receiver.Settings)
 	)
 
-	n.trigger(InTransit, notifier, retries, nil, nil)
+	n.trigger(InTransit, receiver, retries, nil, nil)
 
 restart:
-	client, err := clients.NewHttpRequest(n.specCfg[notifier.Id], notifier.Params, n.envVars)
+	client, err := clients.NewHttpRequest(n.specCfg[receiver.Id], receiver.Params, n.envVars, n.logger)
 	if err != nil {
 		goto errorHandler
 	}
@@ -117,12 +124,12 @@ restart:
 	}
 
 	if response.IsOK() {
-		n.trigger(Success, notifier, retries, response, nil)
+		n.trigger(Success, receiver, retries, response, nil)
 		return nil
 	}
 
 	if retries < maxRetries {
-		n.trigger(Retrying, notifier, retries, response, nil)
+		n.trigger(Retrying, receiver, retries, response, nil)
 
 		retries++
 
@@ -130,14 +137,14 @@ restart:
 	}
 
 errorHandler:
-	n.trigger(Error, notifier, retries, response, err)
+	n.trigger(Error, receiver, retries, response, err)
 
 	return err
 }
 
 func (n *notificationsDispatcher) trigger(
 	state DispatchState,
-	notifier notifiers.Notifier,
+	receiver notifcfg.Receiver,
 	retries int,
 	response *clients.Response,
 	err error,
@@ -148,15 +155,15 @@ func (n *notificationsDispatcher) trigger(
 
 	n.events <- DispatchEvent{
 		State:        state,
-		NotifierId:   notifier.Id,
-		NotifierDesc: notifier.Desc,
+		ReceiverId:   receiver.Id,
+		ReceiverDesc: receiver.Desc,
 		Retries:      retries,
 		Response:     response,
 		Error:        err,
 	}
 }
 
-func (n *notificationsDispatcher) maxRetries(settings *notifiers.Setting) int {
+func (n *notificationsDispatcher) maxRetries(settings *notifcfg.Setting) int {
 	if settings == nil {
 		return n.notificationCfg.DefaultSettings.Retries
 	}
@@ -183,35 +190,20 @@ func (n *notificationsDispatcher) Events() chan DispatchEvent {
 func (n *notificationsDispatcher) dispatchInAsync(errCh chan error, wg *sync.WaitGroup) {
 	ctx := context.Background()
 
-	for _, notifier := range n.notificationCfg.Notifiers {
-		n.logger.Printf("Dispatching %s\n", notifier.Id)
+	for _, receiver := range n.notificationCfg.Receivers {
+		n.logger.Printf("Dispatching [%s:%s]\n", receiver.Id, receiver.Desc)
 
-		go func(notifier notifiers.Notifier) {
+		go func(receiver notifcfg.Receiver) {
 			defer wg.Done()
 
-			if err := n.dispatchNotification(ctx, notifier); err != nil {
+			if err := n.dispatchNotification(ctx, receiver); err != nil {
 				errCh <- err
-				n.logger.Printf("Failed to dispatched id:%s\n", notifier.Id)
+				n.logger.Printf("Failed to dispatched [%s:%s]\n", receiver.Id, receiver.Desc)
 			} else {
-				n.logger.Printf("Successfully dispatched id:%s\n", notifier.Id)
+				n.logger.Printf("Successfully dispatched [%s:%s]\n", receiver.Id, receiver.Desc)
 			}
-		}(notifier)
+		}(receiver)
 	}
-}
-
-func (n *notificationsDispatcher) accumulateErrors(ch chan error) []error {
-	errs := make([]error, 0)
-
-	for {
-		err := <-ch
-		if err == nil {
-			break
-		}
-
-		errs = append(errs, err)
-	}
-
-	return errs
 }
 
 //
@@ -219,8 +211,8 @@ func (n *notificationsDispatcher) accumulateErrors(ch chan error) []error {
 //
 func NewNotificationDispatcher(
 	logger *log.Logger,
-	specs map[string]*configs.Spec,
-	config *notifiers.Config,
+	specs map[string]*receivers.Spec,
+	config *notifcfg.Config,
 	params, envVars map[string]string,
 ) Dispatcher {
 	return &notificationsDispatcher{

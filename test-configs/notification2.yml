@@ -1,16 +1,16 @@
 ##
-# Default settings for all notifiers.
+# Default settings for all notifcfg.
 #
 default_settings:
   retries: 3
   async: true  
   on_error: ignore
-  on_error_notifiers:
+  on_error_receivers:
     - id: slack
       params:
         callback_url: https://httpbin.org/post
 
-notifiers:
+receivers:
   - id: test
     desc: Test1
     params:

@@ -1,4 +1,4 @@
-package configs
+package receivers
 
 //
 // Spec composes all relevant configuration together.

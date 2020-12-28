@@ -1,4 +1,4 @@
-package configs
+package receivers
 
 import (
 	"gopkg.in/yaml.v2"

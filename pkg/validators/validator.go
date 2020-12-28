@@ -1,7 +1,7 @@
 package validators
 
 import (
-	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/receivers"
 	"github.com/we4tech/uampnotif/pkg/templates"
 )
 
@@ -17,7 +17,7 @@ import (
 //
 type integrationSpecValidator struct {
 	templateContext *templates.TemplateContext
-	integration     *configs.Spec
+	integration     *receivers.Spec
 	errors          *validationErrors
 	valid           bool
 }
@@ -89,7 +89,7 @@ func (iv *integrationSpecValidator) addError(field string, message string) {
 // NewValidator returns an instance of validator.
 //
 func NewValidator(
-	integration *configs.Spec,
+	integration *receivers.Spec,
 	templateCtx *templates.TemplateContext) Validator {
 	return &integrationSpecValidator{
 		integration:     integration,
