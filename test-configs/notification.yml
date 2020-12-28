@@ -1,30 +1,30 @@
 ##
-# Default settings for all notifiers.
+# Default settings for all notifcfg.
 #
 default_settings:
   retries: 3
-  # Do you prefer uampnotif to call all notifiers concurrently?
+  # Do you prefer uampnotif to call all notifcfg concurrently?
   async: true
   # What do you want us to do in case of a failure to notify one of the
   # downstream systems?
   #
   #   Accepted values:
   #    - ignore: Do nothing
-  #    - fatal: Exit with 1 if on_error_notifiers is set, notify before exiting.
-  #    - no_error_notifiers: Mute notifying the on_error_notifiers
+  #    - fatal: Exit with 1 if on_error_receivers is set, notify before exiting.
+  #    - no_error_receivers: Mute notifying the on_error_receivers
   #
   on_error: ignore
   # TODO: Future feature
-  # Do you prefer to notify a list of notifiers if error arises?
-  on_error_notifiers:
+  # Do you prefer to notify a list of notifcfg if error arises?
+  on_error_receivers:
     - id: slack
       params:
         callback_url: https://httpbin.org/post
 
 ##
-# A list of notifiers to be invoked whenever uampnotif is launched.
+# A list of Receiver to be invoked whenever it is launched.
 #
-notifiers:
+receivers:
   ##
   # id: Must match with corresponding integration id:
   #

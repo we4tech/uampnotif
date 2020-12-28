@@ -4,12 +4,12 @@ import (
 	"github.com/we4tech/uampnotif/pkg/templates"
 	"testing"
 
-	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/receivers"
 )
 
 var IntegrationTestTables = []struct {
 	testName         string
-	integration      *configs.Spec
+	integration      *receivers.Spec
 	expectValid      bool
 	expectedErrorsOn []string
 }{
@@ -60,8 +60,8 @@ request:
 		[]string{}},
 }
 
-func buildIntegration(config string) *configs.Spec {
-	spec, _ := configs.NewSpec([]byte(config))
+func buildIntegration(config string) *receivers.Spec {
+	spec, _ := receivers.NewSpec([]byte(config))
 
 	return spec
 }

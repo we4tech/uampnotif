@@ -1,11 +1,11 @@
-package notifiers
+package notifcfg
 
 //
-// Config keeps a default settings and a list of notifiers.
+// Config keeps a default settings and a list of notifcfg.
 //
 type Config struct {
 	DefaultSettings Setting `yaml:"default_settings"`
-	Notifiers       []Notifier
+	Receivers       []Receiver
 }
 
 //
@@ -16,13 +16,13 @@ type Setting struct {
 	Retries          int
 	Async            bool
 	OnError          string     `yaml:"on_error"`
-	OnErrorNotifiers []Notifier `yaml:"on_error_notifiers"`
+	OnErrorReceivers []Receiver `yaml:"on_error_receivers"`
 }
 
 //
-// Notifier stores a specific notifier integration specific configuration.
+// Receiver stores a specific configuration.
 //
-type Notifier struct {
+type Receiver struct {
 	Id       string
 	Params   Params
 	Settings *Setting

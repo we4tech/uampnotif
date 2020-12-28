@@ -1,4 +1,4 @@
-package notifiers
+package notifcfg
 
 import (
 	"gopkg.in/yaml.v2"
@@ -44,10 +44,10 @@ func (dcp *parser) readInternal(
 	fileData []byte,
 	appConfigYaml string) (*Config, error) {
 
-	var notifiers = &Config{}
-	if err := yaml.Unmarshal(fileData, notifiers); err != nil {
+	var cfg = &Config{}
+	if err := yaml.Unmarshal(fileData, cfg); err != nil {
 		return nil, common_errors.ConfigParsingError{File: appConfigYaml, Err: err}
 	}
 
-	return notifiers, nil
+	return cfg, nil
 }

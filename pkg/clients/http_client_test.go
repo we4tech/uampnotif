@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"github.com/we4tech/uampnotif/pkg/testutils"
 	"io/ioutil"
+	"log"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
 
-	"github.com/we4tech/uampnotif/pkg/configs"
+	"github.com/we4tech/uampnotif/pkg/receivers"
 )
 
 const TestConfig = `
@@ -44,7 +46,7 @@ func TestNewRequest_ShouldCreateRequestWithoutError(t *testing.T) {
 		"commit_hash": "commit-hash-11333",
 	}
 
-	if _, err := NewHttpRequest(createIntSpec(), params, envVars); err != nil {
+	if _, err := NewHttpRequest(createIntSpec(), params, envVars, nil); err != nil {
 		t.Errorf("could not send receivedRequest. Error - %s", err)
 	}
 }
@@ -141,8 +143,8 @@ func TestSendRequest_ShouldRaiseClientRequestErrorIfRequestFailed(t *testing.T) 
 	}
 }
 
-func createIntSpec() *configs.Spec {
-	spec, _ := configs.NewSpec([]byte(TestConfig))
+func createIntSpec() *receivers.Spec {
+	spec, _ := receivers.NewSpec([]byte(TestConfig))
 
 	return spec
 }
@@ -156,7 +158,11 @@ func buildCommonRequest(mockClient *testutils.MockHttpClient) Client {
 		"commit_hash": "commit-hash-123",
 	}
 
-	request, _ := NewHttpRequest(createIntSpec(), params, envVars)
+	request, _ := NewHttpRequest(createIntSpec(), params, envVars, log.New(
+		os.Stdout,
+		"[test] ",
+		log.Ltime,
+	))
 	request.SetClient(mockClient)
 
 	return request

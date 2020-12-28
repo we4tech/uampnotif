@@ -6,19 +6,19 @@ import (
 )
 
 type cliOpts struct {
-	NotifierFile string
-	ConfigDir    string
+	NotificationCfgFile string
+	ReceiverSpecDir     string
 }
 
 func (o *cliOpts) isEmpty() bool {
-	return o.ConfigDir == "" || o.NotifierFile == ""
+	return o.ReceiverSpecDir == "" || o.NotificationCfgFile == ""
 }
 
 var parseFlags = func() *cliOpts {
 	opts := &cliOpts{}
 
-	flag.StringVar(&opts.NotifierFile, "n", "", "(Required) Locate notifiers.yml file")
-	flag.StringVar(&opts.ConfigDir, "d", "", "(Required) Locate notifiers config directory")
+	flag.StringVar(&opts.NotificationCfgFile, "n", "", "(Required) Locate notification2.yml file")
+	flag.StringVar(&opts.ReceiverSpecDir, "d", "", "(Required) Locate receiver (*.yml) specs directory")
 
 	flag.Parse()
 

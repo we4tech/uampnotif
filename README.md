@@ -16,47 +16,48 @@ make build-mac
 ```bash
 Usage of ./uampnotif:
   -d string
-    	(Required) Locate notifiers config directory
+    	(Required) Locate receivers directory
   -n string
-    	(Required) Locate notifiers.yml file 
+    	(Required) Locate notification.yml file 
 ```
 
 ## Terms
 
 WIP: Confusing. Needs more simplification
 
-- Notifier: A unit of notification recipient
+- Receiver: A unit of notification recipient
+- Notification: A configuration to glue together all notification receivers.
 
 ## Example configuration
 
 ```yaml
 ##
-# Default settings for all notifiers.
+# Default settings for all receivers.
 #
 default_settings:
   retries: 3
-  # Do you prefer uampnotif to call all notifiers concurrently?
+  # Do you prefer uampnotif to call all notifcfg concurrently?
   async: true
   # What do you want us to do in case of a failure to notify one of the
   # downstream systems?
   #
   #   Accepted values:
   #    - ignore: Do nothing
-  #    - fatal: Exit with 1 if on_error_notifiers is set, notify before exiting.
-  #    - no_error_notifiers: Mute notifying the on_error_notifiers
+  #    - fatal: Exit with 1 if on_error_receivers is set, notify before exiting.
+  #    - no_error_receivers: Mute notifying the on_error_receivers
   #
   on_error: ignore
   # TODO: Future feature
-  # Do you prefer to notify a list of notifiers if error arises?
-  on_error_notifiers:
+  # Do you prefer to notify a list of notifcfg if error arises?
+  on_error_receivers:
     - id: slack
       params:
         callback_url: https://httpbin.org/post
 
 ##
-# A list of notifiers to be invoked whenever uampnotif is launched.
+# A list of notifcfg to be invoked whenever uampnotif is launched.
 #
-notifiers:
+receivers:
   ##
   # id: Must match with corresponding integration id:
   #
@@ -92,7 +93,7 @@ notifiers:
 
 ```
 
-## Individual notifier configuration
+## Individual receiver spec
 
 ```yaml
 name: Test

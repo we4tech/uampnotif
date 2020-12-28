@@ -22,15 +22,15 @@ const (
 //
 type DispatchEvent struct {
 	State        DispatchState
-	NotifierId   string
-	NotifierDesc string
+	ReceiverId   string
+	ReceiverDesc string
 	Retries      int
 	Error        error
 	Response     *clients.Response
 }
 
 //
-// Dispatcher provides an interface for implementing notifier's dispatcher.
+// Dispatcher provides an interface for implementing dispatching protocol.
 //
 type Dispatcher interface {
 	Dispatch(ctx context.Context) error
