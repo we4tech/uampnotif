@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 )
 
 var logger *log.Logger
@@ -45,34 +46,30 @@ func main() {
 	params := make(map[string]string)
 	envVars := buildEnvVarsMap()
 	pCtx := context.Background()
-	ctx, cancel := context.WithCancel(pCtx)
+	wg := &sync.WaitGroup{}
 
 	d := dispatcher.NewNotificationDispatcher(logger, specsMap, config, params, envVars)
 
-	go monitorEvents(ctx, logger, d)
+	wg.Add(1)
+	go monitorEvents(logger, d.Events(), wg)
 
-	if err := d.Dispatch(ctx); err != nil {
-		logger.Panicf(color.Red.Sprintf("Failed to dispatch successfully. error: %s", err))
+	if err := d.Dispatch(pCtx); err != nil {
+		logger.Println(color.Red.Sprint("Failed to dispatch successfully"))
 	}
 
-	cancel()
+	wg.Wait()
 }
 
-func monitorEvents(ctx context.Context, logger *log.Logger, d dispatcher.Dispatcher) {
-	for {
-		select {
-		case <-ctx.Done():
-			goto returnCtl
-		case event, ok := <-d.Events():
-			if !ok {
-				goto returnCtl
-			}
-			logger.Print(color.Yellow.Sprintf("Event: %+v\n", event))
-		}
-	}
+func monitorEvents(logger *log.Logger, d chan dispatcher.DispatchEvent, wg *sync.WaitGroup) {
+	defer wg.Done()
 
-returnCtl:
-	return
+	for {
+		event, ok := <-d
+		if !ok {
+			break
+		}
+		logger.Print(color.Yellow.Sprintf("Event: %+v\n", event))
+	}
 }
 
 func buildEnvVarsMap() map[string]string {
