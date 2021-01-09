@@ -50,22 +50,15 @@ func (n *notificationsDispatcher) Done() chan struct{} {
 //
 // TODO(HK): Add support for SYNC requests.
 func (n *notificationsDispatcher) Dispatch(ctx context.Context) error {
+	defer n.closeChannels()
+
 	if err := n.dispatchInAsync(ctx); err != nil {
 		n.logger.Println("Failed to dispatch all notifications")
 
 		return &dispatchError{Errors: []error{err}}
 	}
+
 	fmt.Println("Dispatched")
-
-	if n.events != nil {
-		fmt.Println("Closing events")
-		close(n.events)
-	}
-
-	if n.done != nil {
-		close(n.done)
-	}
-
 	fmt.Println("Closed err")
 
 	n.logger.Println("Successfully dispatched all notifications")
@@ -190,6 +183,17 @@ func (n *notificationsDispatcher) dispatchInAsync(ctx context.Context) error {
 	}
 
 	return g.Wait()
+}
+
+func (n *notificationsDispatcher) closeChannels() {
+	if n.events != nil {
+		fmt.Println("Closing events")
+		close(n.events)
+	}
+
+	if n.done != nil {
+		close(n.done)
+	}
 }
 
 //
