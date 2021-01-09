@@ -105,7 +105,7 @@ restart:
 	}
 
 	if retries < maxRetries {
-		n.trigger(Retrying, receiver, retries, response, nil)
+		n.trigger(Retrying, receiver, retries+1, response, nil)
 
 		retries++
 
