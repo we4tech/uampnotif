@@ -64,13 +64,19 @@ func monitorEvents(logger *log.Logger, d chan dispatcher.DispatchEvent, wg *sync
 			break
 		}
 
+		respBody := ""
+
+		if event.Response != nil {
+			respBody = event.Response.Body
+		}
+
 		switch event.State {
 		case dispatcher.Retrying:
-			logger.Println(color.Yellow.Sprintf("Event: %+v", event))
+			logger.Println(color.Yellow.Sprintf("Event: %+v, response: %s", event, respBody))
 		case dispatcher.Error:
-			logger.Println(color.Red.Sprintf("Event: %+v", event))
+			logger.Println(color.Red.Sprintf("Event: %+v, response: %s", event, respBody))
 		case dispatcher.Success:
-			logger.Println(color.Green.Sprintf("Event: %+v", event))
+			logger.Println(color.Green.Sprintf("Event: %+v, response: %s", event, respBody))
 		default:
 			logger.Println(color.Gray.Sprintf("Event: %+v", event))
 		}
