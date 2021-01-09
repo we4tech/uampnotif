@@ -27,22 +27,17 @@ func init() {
 func main() {
 	opts := parseFlags()
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Panic(err)
-	}
-
 	logger.Println("Loading configuration...")
 
 	parser := notifcfg.NewParser()
-	cfgFile := path.Join(wd, opts.NotificationCfgFile)
+	cfgFile := opts.NotificationCfgFile
 
 	config, err := parser.Read(cfgFile)
 	if err != nil {
 		log.Panicf("could not parse file from %s. error: %s", cfgFile, err)
 	}
 
-	specsMap := buildSpecsMap(opts, wd)
+	specsMap := buildSpecsMap(opts)
 	params := make(map[string]string)
 	envVars := buildEnvVarsMap()
 	pCtx := context.Background()
@@ -84,12 +79,10 @@ func buildEnvVarsMap() map[string]string {
 	return envVars
 }
 
-func buildSpecsMap(opts *cliOpts, wd string) map[string]*receivers.Spec {
+func buildSpecsMap(opts *cliOpts) map[string]*receivers.Spec {
 	specsMap := make(map[string]*receivers.Spec)
 
-	fullPath := path.Join(wd, opts.ReceiverSpecDir)
-
-	configFiles, err := ioutil.ReadDir(fullPath)
+	configFiles, err := ioutil.ReadDir(opts.ReceiverSpecDir)
 	if err != nil {
 		log.Panicf("could not read directory. error: %s", err)
 	}
@@ -97,7 +90,7 @@ func buildSpecsMap(opts *cliOpts, wd string) map[string]*receivers.Spec {
 	parser := receivers.NewParser()
 
 	for _, file := range configFiles {
-		fullPath := path.Join(wd, opts.ReceiverSpecDir, file.Name())
+		fullPath := path.Join(opts.ReceiverSpecDir, file.Name())
 		spec, err := parser.Read(fullPath)
 		if err != nil {
 			log.Panicf("could not load config file - %s. error: %s", fullPath, err)
