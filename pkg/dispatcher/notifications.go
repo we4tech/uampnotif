@@ -6,6 +6,7 @@ import (
 	"github.com/we4tech/uampnotif/pkg/clients"
 	"github.com/we4tech/uampnotif/pkg/notifcfg"
 	"github.com/we4tech/uampnotif/pkg/receivers"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"sync"
 )
@@ -48,44 +49,19 @@ func (n *notificationsDispatcher) Done() chan struct{} {
 // Dispatch triggers events for all notifcfg using separate go-routine.
 //
 // TODO(HK): Add support for SYNC requests.
-func (n *notificationsDispatcher) Dispatch(_ context.Context) error {
-	wg := &sync.WaitGroup{}
-	errCh := make(chan error)
-	errs := make([]error, 0)
-	wgDone := false
+func (n *notificationsDispatcher) Dispatch(ctx context.Context) error {
+	defer n.closeChannels()
 
-	wg.Add(len(n.notificationCfg.Receivers))
-
-	go n.dispatchInAsync(errCh, wg)
-	go func() {
-		for !wgDone {
-			if err := <-errCh; err != nil {
-				errs = append(errs, err)
-			}
-		}
-	}()
-
-	wg.Wait()
-
-	wgDone = true
-
-	close(errCh)
-
-	if n.events != nil {
-		close(n.events)
-	}
-
-	if n.done != nil {
-		close(n.done)
-	}
-
-	if len(errs) > 0 {
+	if err := n.dispatchInAsync(ctx); err != nil {
 		n.logger.Println("Failed to dispatch all notifications")
 
-		return &dispatchError{Errors: errs}
-	} else {
-		n.logger.Println("Successfully dispatched all notifications")
+		return &dispatchError{Errors: []error{err}}
 	}
+
+	fmt.Println("Dispatched")
+	fmt.Println("Closed err")
+
+	n.logger.Println("Successfully dispatched all notifications")
 
 	return nil
 }
@@ -129,7 +105,7 @@ restart:
 	}
 
 	if retries < maxRetries {
-		n.trigger(Retrying, receiver, retries, response, nil)
+		n.trigger(Retrying, receiver, retries+1, response, nil)
 
 		retries++
 
@@ -187,22 +163,36 @@ func (n *notificationsDispatcher) Events() chan DispatchEvent {
 	return n.events
 }
 
-func (n *notificationsDispatcher) dispatchInAsync(errCh chan error, wg *sync.WaitGroup) {
-	ctx := context.Background()
+func (n *notificationsDispatcher) dispatchInAsync(ctx context.Context) error {
+	g, _ := errgroup.WithContext(ctx)
 
 	for _, receiver := range n.notificationCfg.Receivers {
 		n.logger.Printf("Dispatching [%s:%s]\n", receiver.Id, receiver.Desc)
 
-		go func(receiver notifcfg.Receiver) {
-			defer wg.Done()
-
+		g.Go(func() error {
 			if err := n.dispatchNotification(ctx, receiver); err != nil {
-				errCh <- err
 				n.logger.Printf("Failed to dispatched [%s:%s]\n", receiver.Id, receiver.Desc)
-			} else {
-				n.logger.Printf("Successfully dispatched [%s:%s]\n", receiver.Id, receiver.Desc)
+
+				return err
 			}
-		}(receiver)
+
+			n.logger.Printf("Successfully dispatched [%s:%s]\n", receiver.Id, receiver.Desc)
+
+			return nil
+		})
+	}
+
+	return g.Wait()
+}
+
+func (n *notificationsDispatcher) closeChannels() {
+	if n.events != nil {
+		fmt.Println("Closing events")
+		close(n.events)
+	}
+
+	if n.done != nil {
+		close(n.done)
 	}
 }
 
